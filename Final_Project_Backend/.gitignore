@@ -1,24 +1,18 @@
-# Build
-bin/
-obj/
-
-# VS files
-*.user
-*.suo
+# Ignore backend build folders inside the subdirectory
+Final_Project_Backend/bin/
+Final_Project_Backend/obj/
 .vs/
+
+# User and IDE files
+Final_Project_Backend/*.user
+Final_Project_Backend/.vscode/
+Final_Project_Backend/.idea/
+
+# Secrets
+Final_Project_Backend/appsettings.Development.json
 
 # Logs
 *.log
 
-# Secrets
-appsettings.Development.json
-
-# IDEs
-.vscode/
-.idea/
-
-# EF Core
-Migrations/
-
-# Misc
-*.db
+# Entity Framework Migrations (optional)
+# Final_Project_Backend/Migrations/
