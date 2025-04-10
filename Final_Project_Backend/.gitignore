@@ -1,0 +1,24 @@
+# Build
+bin/
+obj/
+
+# VS files
+*.user
+*.suo
+.vs/
+
+# Logs
+*.log
+
+# Secrets
+appsettings.Development.json
+
+# IDEs
+.vscode/
+.idea/
+
+# EF Core
+Migrations/
+
+# Misc
+*.db
