@@ -1,0 +1,17 @@
+.section {
+    padding: var(--section-padding);
+}
+
+.hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: var(--gap-24);
+    background: var(--gradient-lavender-pink);
+    height: 80vh;
+    margin: 8px;
+    padding: 12px 64px;
+    border-radius: var(--radius-8);
+}
