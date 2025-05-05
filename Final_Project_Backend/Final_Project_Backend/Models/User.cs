@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using ProjectTask = Final_Project_Backend.Models.Task;
 
 namespace Final_Project_Backend.Models
 {
@@ -24,8 +25,8 @@ namespace Final_Project_Backend.Models
         // Navigation properties
         public ICollection<Workspace> WorkspacesCreated { get; set; } = new List<Workspace>();
         public ICollection<UserWorkspace> UserWorkspaces { get; set; } = new List<UserWorkspace>();
-        public ICollection<Task> TasksCreated { get; set; } = new List<Task>();
-        public ICollection<Task> TasksAssigned { get; set; } = new List<Task>();
+        public ICollection<ProjectTask> TasksCreated { get; set; } = new List<ProjectTask>();
+        public ICollection<ProjectTask> TasksAssigned { get; set; } = new List<ProjectTask>();
         public ICollection<Tag> TagsCreated { get; set; } = new List<Tag>();
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
         public ICollection<Mention> Mentions { get; set; } = new List<Mention>();
