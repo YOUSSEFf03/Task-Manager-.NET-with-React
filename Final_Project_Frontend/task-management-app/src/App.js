@@ -10,7 +10,6 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/dashboard" element={<Dashboard/>}/>
-        {/* Add more routes as needed */}
       </Routes>
     </Router>
   );
