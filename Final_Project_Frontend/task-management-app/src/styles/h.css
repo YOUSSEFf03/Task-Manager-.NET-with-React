@@ -1,0 +1,78 @@
+.h1-style {
+    font-size: var(--fs-48);
+    font-family: var(--ff-poppins);
+    margin: 0;
+}
+
+.h2-style {
+    font-size: var(--fs-36);
+    color: var(--black);
+    font-family: var(--ff-poppins);
+    font-weight: var(--fw-600);
+    margin: 0;
+}
+
+.h3-style {
+    font-size: var(--fs-24);
+    color: var(--white);
+    font-family: var(--ff-poppins);
+    font-weight: var(--fw-600);
+    margin: 0;
+}
+
+.main_details_div .h3-style, .sub-nav .h3-style {
+    color: var(--black);
+} 
+
+.add_property_header .h3-style {
+    color: var(--primary-color);
+}
+
+.card_content .h4-style {
+    color: var(--black);
+    margin-bottom: 0;
+}
+
+.h4-style {
+    font-size: var(--fs-18);
+    color: var(--white);
+    font-family: var(--ff-poppins);
+    font-weight: var(--fw-600);
+    margin: 0;
+    margin-bottom: 10px;
+}
+
+.filter_div .h4-style, .rental_section .h4-style, .owner_div .h4-style {
+    color: var(--black);
+    margin-bottom: 0;
+}
+
+.rental_section .h4-style {
+    margin-top: 8px;
+}
+
+.h5-style {
+    font-size: var(--fs-14);
+    color: var(--white);
+    font-family: var(--ff-poppins);
+    font-weight: var(--fw-500);
+    margin: 0;
+}
+
+.input_box .h5-style, .owner_details .h5-style {
+    color: var(--black);
+}
+
+.h6-style {
+    font-size: var(--fs-14);
+    color: var(--neutral-900);
+    font-family: var(--ff-poppins);
+    font-weight: var(--fw-500);
+    margin: 0;
+}
+
+.rental_feature .h6-style {
+    font-size: var(--fs-15);
+    font-weight: var(--fw-600);
+    width: 100%;
+}
