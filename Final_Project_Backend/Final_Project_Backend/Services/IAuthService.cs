@@ -6,7 +6,8 @@ namespace Final_Project_Backend.Services
     public interface IAuthService
     {
         Task<dynamic> SignUp(UserSignUpDto userDto);
-        Task<dynamic> Login(UserLoginDto loginDto);
+        Task<AuthResult> Login(UserLoginDto loginDto);
+        // Task<dynamic> Login(UserLoginDto loginDto);
         Task<dynamic> Logout(string token);
     }
 }

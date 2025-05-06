@@ -24,7 +24,6 @@
 .logo {
     color: var(--black);
     text-decoration: none;
-    margin-left: 16px;
     font-size: var(--fs-24);
     font-weight: var(--fw-600);
     font-style: italic;

@@ -1,7 +1,7 @@
 using Final_Project_Backend.DTOs;
 using Final_Project_Backend.Models;
 using System.Threading.Tasks;
-using Final_Project_Backend.Services; 
+using Final_Project_Backend.Services;
 using BCrypt.Net;
 using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
@@ -45,28 +45,51 @@ namespace Final_Project_Backend.Services
             return new { Success = true, Message = "User signed up successfully.", User = createdUser };
         }
 
-        public async Task<dynamic> Login(UserLoginDto loginDto)
+        // public async Task<dynamic> Login(UserLoginDto loginDto)
+        // {
+        //     var user = await _userRepository.GetUserByEmailAsync(loginDto.Email);
+        //     if (user == null)
+        //     {
+        //         return new { Success = false, Message = "Invalid email or password." };
+        //     }
+
+        //     bool isPasswordValid = BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash);
+        //     if (!isPasswordValid)
+        //     {
+        //         return new { Success = false, Message = "Invalid email or password." };
+        //     }
+
+        //     var token = GenerateJwtToken(user);
+
+        //     return new
+        //     {
+        //         Success = true,
+        //         Message = "Login successful.",
+        //         Token = token,
+        //         User = user
+        //     };
+        // }
+
+        public async Task<AuthResult> Login(UserLoginDto loginDto)
         {
             var user = await _userRepository.GetUserByEmailAsync(loginDto.Email);
-            if (user == null)
+            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
             {
-                return new { Success = false, Message = "Invalid email or password." };
-            }
-
-            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash);
-            if (!isPasswordValid)
-            {
-                return new { Success = false, Message = "Invalid email or password." };
+                return new AuthResult
+                {
+                    Success = false,
+                    Message = "Invalid email or password."
+                };
             }
 
             var token = GenerateJwtToken(user);
 
-            return new
+            return new AuthResult
             {
                 Success = true,
                 Message = "Login successful.",
                 Token = token,
-                User = user
+                FullName = user.FullName
             };
         }
 
@@ -76,29 +99,29 @@ namespace Final_Project_Backend.Services
             return new { Success = true, Message = "User logged out successfully." };
         }
 
-       private string GenerateJwtToken(User user)
-{
-    var claims = new[]
-    {
+        private string GenerateJwtToken(User user)
+        {
+            var claims = new[]
+            {
         new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
         new Claim(JwtRegisteredClaimNames.Email, user.Email),
         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
     };
 
-   
-    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
-    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-    var token = new JwtSecurityToken(
-        issuer: _jwtSettings.Issuer,
-        audience: _jwtSettings.Audience,
-        claims: claims,
-        expires: DateTime.UtcNow.AddHours(1),
-        signingCredentials: creds
-    );
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-    return new JwtSecurityTokenHandler().WriteToken(token);
-}
+            var token = new JwtSecurityToken(
+                issuer: _jwtSettings.Issuer,
+                audience: _jwtSettings.Audience,
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(1),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
 
     }
 }

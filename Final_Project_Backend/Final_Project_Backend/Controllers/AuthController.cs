@@ -21,7 +21,7 @@ public class AuthController : ControllerBase
         var result = await _authService.SignUp(userDto);
         if (!result.Success)
             return BadRequest(result.Message);
-        
+
         return Ok(result);
     }
 
@@ -31,18 +31,22 @@ public class AuthController : ControllerBase
         var result = await _authService.Login(loginDto);
         if (!result.Success)
             return Unauthorized(result.Message);
-        
-        return Ok(result);
+
+        return Ok(new
+        {
+            token = result.Token,
+            fullName = result.FullName
+        });
     }
 
     [HttpPost("logout")]
     [Authorize]
     public async Task<IActionResult> Logout()
     {
-        
+
         var token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
-        
+
         if (string.IsNullOrEmpty(token))
         {
             return Unauthorized("Token is missing or invalid.");

@@ -34,6 +34,70 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    position: relative;
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: 44px;
+    right: 0;
+    cursor: default;
+    background: var(--white);
+    min-width: 250px;
+    max-width: 350px;
+    box-shadow: var(--shadow-2);
+    border-radius: var(--radius-4);
+    z-index: 100;
+    padding: var(--padding-16);
+    font-family: var(--ff-poppins);
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-16);
+    margin-bottom: 16px;
+}
+
+.profile-info .link-view-acc {
+    color: var(--info-color);
+    font-size: var(--fs-12);
+}
+
+.initials-circle {
+    width: 80px;
+    height: 80px;
+    background-color: var(--tertiary-50);
+    font-weight: var(--fw-500);
+    color: var(--white);
+    border-radius: var(--radius-full);
+    padding: var(--padding-8);
+    /* border-radius: var(--radius-100); */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-36);
+}
+
+.name {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.email {
+    font-size: 13px;
+    color: #666;
+}
+
+.logout-btn {
+    width: 100%;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
 }
 
 .notification-circle {

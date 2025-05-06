@@ -6,13 +6,14 @@ const WorkspaceCard = ({ name, description }) => {
   const cardStyle = {
     display: 'flex',
     alignItems: 'center',
-    background: 'linear-gradient(135deg, #f9f9f9, #e0e0e0)',
+    // background: 'linear-gradient(135deg, #f9f9f9, #e0e0e0)',
+    backgroundColor: '#ffffff',
     borderRadius: '8px',
     padding: '12px 16px',
     marginTop: '8px',
     width: '250px',
     height: '100px',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    boxShadow: 'var(--shadow-1)',
     marginRight: '12px',
     flexShrink: 0,
   };
@@ -113,52 +114,52 @@ const Dashboard = () => {
     <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
       {/* Hero section */}
       {/* Hero Section with Header and Search on the same line */}
-<div style={{
-  background: 'linear-gradient(135deg, #f4c7e1, #b5a4d9)', // Lavender Pink gradient
-  margin: '8px',
-  padding: '24px 32px',
-  borderRadius: '8px',
-}}>
-  <div style={{
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '24px',
-  }}>
-    <H level={1} style={{ margin: 0 }}>Workspaces</H>
-    <input
-      type="text"
-      style={searchStyle}
-      placeholder="Search workspaces"
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-    />
-  </div>
+      <div style={{
+        background: 'linear-gradient(135deg, #f4c7e1, #b5a4d9)', // Lavender Pink gradient
+        margin: '8px',
+        padding: '24px 32px',
+        borderRadius: '8px',
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '24px',
+        }}>
+          <H level={1} style={{ margin: 0 }}>Workspaces</H>
+          <input
+            type="text"
+            style={searchStyle}
+            placeholder="Search workspaces"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
 
-  {/* Available Workspaces Box aligned under the header/search */}
-  <div style={{
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: '8px',
-    padding: '15px',
-  }}>
-    <div style={{ width: '70%' }}>
-      <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>Available Workspaces</h3>
-      <p style={{ fontSize: '14px', color: '#888' }}>List of all available workspaces.</p>
-    </div>
-    <Button style={createButtonStyle}>
-      Create Workspace
-    </Button>
-  </div>
-</div>
+        {/* Available Workspaces Box aligned under the header/search */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          backgroundColor: '#f0f0f0',
+          borderRadius: '8px',
+          padding: '15px',
+        }}>
+          <div style={{ width: '70%' }}>
+            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>Available Workspaces</h3>
+            <p style={{ fontSize: '14px', color: '#888' }}>List of all available workspaces.</p>
+          </div>
+          <Button style={createButtonStyle}>
+            Create Workspace
+          </Button>
+        </div>
+      </div>
 
 
       {/* Owned Workspaces Section */}
       <div style={sectionStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <H level={2} style={{ fontSize: '20px', fontWeight: '600', color: '#333' }}>
+          <H level={4} style={{ fontSize: '20px', fontWeight: '600', color: '#333' }}>
             Owned Workspaces ({owned.length}) {/* Owned Workspaces Header */}
           </H>
           <button style={toggleButtonStyle} onClick={() => toggleVisibility('owned')}>
