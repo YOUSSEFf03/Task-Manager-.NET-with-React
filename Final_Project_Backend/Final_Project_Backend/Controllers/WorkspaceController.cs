@@ -26,7 +26,8 @@ public class WorkspaceController : ControllerBase
         }
         var userId = int.Parse(userIdClaim.Value);
 
-        var workspaces = await _workspaceService.GetWorkspacesByUser(userId);
+        var workspaces = await _workspaceService.GetWorkspaceDtosByUser(userId);
+
         return Ok(workspaces);
     }
 
@@ -59,9 +60,9 @@ public class WorkspaceController : ControllerBase
     }
 
     [HttpGet("{workspaceId}/users")]
-    public async Task<IActionResult> GetWorkspaceUsers(int workspaceId)
+    public async Task<IActionResult> GetUserWorkspaces(int workspaceId)
     {
-        var users = await _workspaceService.GetWorkspaceUsers(workspaceId);
+        var users = await _workspaceService.GetUserWorkspaces(workspaceId);
         return Ok(users);
     }
 }

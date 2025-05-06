@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Final_Project_Backend.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class FixWorkspaceAutoIncrement : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -88,7 +88,8 @@ namespace Final_Project_Backend.Migrations
                     Description = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Status = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CreatedByUserId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -137,16 +138,17 @@ namespace Final_Project_Backend.Migrations
                 name: "UserWorkspaces",
                 columns: table => new
                 {
-                    UserWorkspaceId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     UserId = table.Column<int>(type: "int", nullable: false),
                     WorkspaceId = table.Column<int>(type: "int", nullable: false),
                     Role = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    JoinedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserWorkspaces", x => x.UserWorkspaceId);
+                    table.PrimaryKey("PK_UserWorkspaces", x => x.Id);
                     table.ForeignKey(
                         name: "FK_UserWorkspaces_Users_UserId",
                         column: x => x.UserId,
@@ -343,8 +345,8 @@ namespace Final_Project_Backend.Migrations
                     UserWorkspaceId = table.Column<int>(type: "int", nullable: false),
                     ProjectId = table.Column<int>(type: "int", nullable: true),
                     TagId = table.Column<int>(type: "int", nullable: true),
-                    MentionedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    CommentId = table.Column<int>(type: "int", nullable: true)
+                    CommentId = table.Column<int>(type: "int", nullable: false),
+                    MentionedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -353,7 +355,8 @@ namespace Final_Project_Backend.Migrations
                         name: "FK_Mentions_Comments_CommentId",
                         column: x => x.CommentId,
                         principalTable: "Comments",
-                        principalColumn: "CommentId");
+                        principalColumn: "CommentId",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Mentions_Projects_ProjectId",
                         column: x => x.ProjectId,
@@ -368,7 +371,7 @@ namespace Final_Project_Backend.Migrations
                         name: "FK_Mentions_UserWorkspaces_UserWorkspaceId",
                         column: x => x.UserWorkspaceId,
                         principalTable: "UserWorkspaces",
-                        principalColumn: "UserWorkspaceId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Mentions_Users_UserId",

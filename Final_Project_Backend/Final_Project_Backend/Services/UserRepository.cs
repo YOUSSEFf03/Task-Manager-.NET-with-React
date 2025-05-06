@@ -28,6 +28,12 @@ namespace Final_Project_Backend.Services
         return null;
     }
 
+    public async Task<User> GetUserByIdAsync(int userId)
+    {
+        return await _context.Users
+            .FirstOrDefaultAsync(u => u.UserId == userId) ?? throw new InvalidOperationException("User not found.");  // Adjust based on your User entity's key
+    }
+
     public async System.Threading.Tasks.Task<User> CreateUserAsync(User user)
     {
         _context.Users.Add(user);
