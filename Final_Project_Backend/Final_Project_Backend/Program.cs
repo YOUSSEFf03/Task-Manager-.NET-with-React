@@ -45,7 +45,6 @@ if (jwtSettings == null)
 {
     throw new InvalidOperationException("JWT settings not found in the configuration.");
 }
-<<<<<<< HEAD
 
 
 // Add 
@@ -56,9 +55,6 @@ builder.Services.AddScoped<IProjectTaskService, ProjectTaskService>();
 
 
 var key = Encoding.ASCII.GetBytes(jwtSettings.Key);  
-=======
-var key = Encoding.ASCII.GetBytes(jwtSettings.Key);
->>>>>>> d6ffb89a7cd1a9a4dc9b1488aa17ffb508eae2aa
 
 builder.Services.AddAuthentication(options =>
 {
