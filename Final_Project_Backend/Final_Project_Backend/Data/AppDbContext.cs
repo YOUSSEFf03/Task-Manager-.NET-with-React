@@ -22,6 +22,9 @@ namespace Final_Project_Backend.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<NotificationType> NotificationTypes { get; set; }
 
+
+    
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Configure Task relationships
@@ -138,6 +141,12 @@ modelBuilder.Entity<Notification>()
     .OnDelete(DeleteBehavior.Cascade);
 
             
-        }
+        
+
+
+modelBuilder.Entity<UserWorkspace>()
+    .Property(e => e.Role)
+    .HasConversion<string>(); 
+    }
     }
 }

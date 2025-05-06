@@ -3,7 +3,6 @@ using System;
 using Final_Project_Backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -12,26 +11,22 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Final_Project_Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250503191147_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250506182447_FixWorkspaceAutoIncrement")]
+    partial class FixWorkspaceAutoIncrement
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.13")
+                .HasAnnotation("ProductVersion", "8.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
-
-            MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
             modelBuilder.Entity("Final_Project_Backend.Models.Attachment", b =>
                 {
                     b.Property<int>("AttachmentId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("AttachmentId"));
 
                     b.Property<string>("FileName")
                         .IsRequired()
@@ -65,8 +60,6 @@ namespace Final_Project_Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("CommentId"));
-
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -95,9 +88,7 @@ namespace Final_Project_Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("CommentId")
+                    b.Property<int>("CommentId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("MentionedAt")
@@ -136,8 +127,6 @@ namespace Final_Project_Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("NotificationId"));
-
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -168,8 +157,6 @@ namespace Final_Project_Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("NotificationTypeId"));
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -189,7 +176,8 @@ namespace Final_Project_Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ProjectId"));
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -219,8 +207,6 @@ namespace Final_Project_Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("TagId"));
-
                     b.Property<string>("Color")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -249,8 +235,6 @@ namespace Final_Project_Backend.Migrations
                     b.Property<int>("TaskId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("TaskId"));
 
                     b.Property<int?>("AssignedToUserId")
                         .HasColumnType("int");
@@ -315,8 +299,6 @@ namespace Final_Project_Backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("UserId"));
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
@@ -339,11 +321,12 @@ namespace Final_Project_Backend.Migrations
 
             modelBuilder.Entity("Final_Project_Backend.Models.UserWorkspace", b =>
                 {
-                    b.Property<int>("UserWorkspaceId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("UserWorkspaceId"));
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Role")
                         .IsRequired()
@@ -355,7 +338,7 @@ namespace Final_Project_Backend.Migrations
                     b.Property<int>("WorkspaceId")
                         .HasColumnType("int");
 
-                    b.HasKey("UserWorkspaceId");
+                    b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
@@ -369,8 +352,6 @@ namespace Final_Project_Backend.Migrations
                     b.Property<int>("WorkspaceId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("WorkspaceId"));
 
                     b.Property<int>("CreatedByUserId")
                         .HasColumnType("int");
@@ -430,9 +411,11 @@ namespace Final_Project_Backend.Migrations
 
             modelBuilder.Entity("Final_Project_Backend.Models.Mention", b =>
                 {
-                    b.HasOne("Final_Project_Backend.Models.Comment", null)
+                    b.HasOne("Final_Project_Backend.Models.Comment", "Comment")
                         .WithMany("Mentions")
-                        .HasForeignKey("CommentId");
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Final_Project_Backend.Models.Project", "Project")
                         .WithMany()
@@ -453,6 +436,8 @@ namespace Final_Project_Backend.Migrations
                         .HasForeignKey("UserWorkspaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Comment");
 
                     b.Navigation("Project");
 

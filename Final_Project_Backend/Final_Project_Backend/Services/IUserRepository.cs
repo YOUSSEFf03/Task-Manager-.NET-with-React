@@ -10,6 +10,8 @@ public interface IUserRepository
     Task<User> CreateUserAsync(User user);
     Task<string> GenerateTokenAsync(User user);
     Task<bool> InvalidateTokenAsync(string token);
+
+    Task<User> GetUserByIdAsync(int userId); 
 }
 
 }
