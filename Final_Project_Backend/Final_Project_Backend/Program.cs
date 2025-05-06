@@ -8,6 +8,16 @@ using Final_Project_Backend.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -29,7 +39,7 @@ if (jwtSettings == null)
 {
     throw new InvalidOperationException("JWT settings not found in the configuration.");
 }
-var key = Encoding.ASCII.GetBytes(jwtSettings.Key);  
+var key = Encoding.ASCII.GetBytes(jwtSettings.Key);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -60,6 +70,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("AllowFrontend");
 
 app.UseHttpsRedirection();
 app.UseAuthentication();   // Enable authentication middleware

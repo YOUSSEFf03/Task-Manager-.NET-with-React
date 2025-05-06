@@ -3,7 +3,6 @@ import { NavLink, Link } from 'react-router-dom';
 import '../styles/landing.css';
 import H from '../components/H.jsx';
 import Button from '../components/Button.jsx';
-import Footer from '../components/Footer.jsx';
 
 export default function Landing() {
     return (
@@ -20,7 +19,7 @@ export default function Landing() {
                         <li><NavLink to="/z" className={({ isActive }) => `nav-link ${isActive ? 'selected' : ''}`}>Contact Us</NavLink></li>
                     </ul>
                     <div className='btn-header'>
-                        <Link to="/signin" className='btn-link'>
+                        <Link to="/login" className='btn-link'>
                             <Button text="Sign-in" color="tertiary" />
                         </Link>
                         <Link to="/signup" className='btn-link'>

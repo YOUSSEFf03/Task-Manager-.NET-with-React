@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/login.css';
 import { Link } from 'react-router-dom';
 import Button from '../components/Button';
-import users from '../data/users.json';
-import loginImg from '../assets/bg-img4.jpg';
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -12,22 +10,39 @@ function Login() {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
+        setError('');
+        const credentials = { email, password };
 
-        const user = users.find(
-            (user) => user.email === email && user.password === password
-        );
+        try {
+            const response = await fetch('http://localhost:5137/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(credentials),
+            });
 
-        if (user) {
-            if (user.role === 'landlord') {
-                localStorage.setItem('loggedInLandlordId', user.id);
-                navigate('/landlord-dashboard');
-            } else {
-                setError('Access denied');
+            let data;
+            try {
+                data = await response.json();
+            } catch {
+                const text = await response.text();
+                throw new Error(text);
             }
-        } else {
-            setError('Invalid email or password.');
+
+            if (!response.ok) {
+                setError(data || 'Login failed');
+                return;
+            }
+
+            localStorage.setItem('token', data.token);
+
+            navigate('/dashboard');
+        } catch (err) {
+            console.error('Login failed:', err);
+            setError('Something went wrong. Please try again.');
         }
     };
 
@@ -77,12 +92,12 @@ function Login() {
                         />
                     </div>
 
-                    <Button text={"Log-in"} color='secondary' onClick={handleLogin} />
+                    <Button text={"Log-in"} color='secondary' />
                 </form>
                 {error && <p style={{ color: 'red' }}>{error}</p>}
             </div>
             <div className='img-side'>
-                <img src={loginImg} alt="Side Image" />
+                {/* <img src={loginImg} alt="Side Image" /> */}
             </div>
         </section>
     );
