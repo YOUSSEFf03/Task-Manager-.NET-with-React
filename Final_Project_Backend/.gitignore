@@ -10,6 +10,7 @@ Final_Project_Backend/.idea/
 
 # Secrets
 Final_Project_Backend/appsettings.Development.json
+Final_Project_Backend/appsettings.json
 
 # Logs
 *.log
