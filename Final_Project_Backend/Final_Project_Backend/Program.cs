@@ -52,8 +52,6 @@ builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
 builder.Services.AddScoped<IProjectTaskService, ProjectTaskService>();
 
 
-
-
 var key = Encoding.ASCII.GetBytes(jwtSettings.Key);  
 
 builder.Services.AddAuthentication(options =>

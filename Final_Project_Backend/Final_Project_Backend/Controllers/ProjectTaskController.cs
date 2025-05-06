@@ -57,4 +57,46 @@ public class ProjectTaskController : ControllerBase
         var result = await _projectTaskService.CreateSubtask(userId, taskId, subtaskDto);
         return Ok(result);
     }
+
+
+    [HttpGet("{workspaceId}/projects")]
+public async Task<IActionResult> GetProjects(int workspaceId)
+{   
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (userIdClaim == null)
+    {
+        return Unauthorized("User not authenticated");
+    }
+    var userId = int.Parse(userIdClaim);
+    var result = await _projectTaskService.GetProjects(workspaceId , userId);
+    return Ok(result);
 }
+
+[HttpGet("{projectId}/tasks")]
+public async Task<IActionResult> GetTasks(int projectId)
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (userIdClaim == null)
+    {
+        return Unauthorized("User not authenticated");
+    }
+    var userId = int.Parse(userIdClaim);
+    var result = await _projectTaskService.GetTasks(projectId, userId);
+    return Ok(result);
+}
+
+[HttpGet("tasks/{parentTaskId}/subtasks")]
+public async Task<IActionResult> GetSubtasks(int parentTaskId)
+{
+
+     var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (userIdClaim == null)
+    {
+        return Unauthorized("User not authenticated");
+    }
+    var userId = int.Parse(userIdClaim);
+    var result = await _projectTaskService.GetSubtasks(parentTaskId , userId);
+    return Ok(result);
+}
+}
+

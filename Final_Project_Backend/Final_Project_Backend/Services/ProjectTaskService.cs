@@ -122,5 +122,106 @@ namespace Final_Project_Backend.Services
 
             return subtask;
         }
+    
+
+   public async Task<IEnumerable<ProjectResponseDto>> GetProjects(int workspaceId, int userId)
+        {
+
+
+        var hasAccess = await _context.UserWorkspaces
+        .AnyAsync(uw => uw.WorkspaceId == workspaceId && uw.UserId == userId);
+
+    if (!hasAccess)
+        throw new UnauthorizedAccessException("User not in workspace");
+
+
+            return await _context.Projects
+                .Where(p => p.WorkspaceId == workspaceId)
+                .Include(p => p.Workspace)
+                .Select(p => new ProjectResponseDto
+                {
+                    ProjectId = p.ProjectId,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Status = p.Status,
+                    WorkspaceId = p.WorkspaceId,
+                    CreatedByUserId = p.CreatedByUserId
+                })
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<TaskResponseDto>> GetTasks(int projectId , int userId)
+        {
+
+    var project = await _context.Projects
+        .Include(p => p.Workspace)
+        .ThenInclude(w => w.UserWorkspaces)
+        .FirstOrDefaultAsync(p => p.ProjectId == projectId);
+
+    if (project?.Workspace.UserWorkspaces.All(uw => uw.UserId != userId) == true)
+        throw new UnauthorizedAccessException("No access to project");
+
+            return await _context.Tasks
+                .Where(t => t.ProjectId == projectId && t.ParentTaskId == null) 
+                .Include(t => t.CreatedByUser)
+                .Include(t => t.AssignedToUser)
+                .Select(t => new TaskResponseDto
+                {
+                    TaskId = t.TaskId,
+                    ProjectId = t.ProjectId,
+                    Title = "", // Add this if needed in DTO
+                    Description = "", // Add this if needed in DTO
+                    Priority = t.Priority,
+                    Status = t.Status,
+                    DueDate = t.DueDate,
+                    CreatedAt = t.CreatedAt,
+                    CreatedByUserId = t.CreatedByUserId,
+                    AssignedToUserId = t.AssignedToUserId,
+                    ParentTaskId = t.ParentTaskId
+                })
+                .ToListAsync();
+        }
+
+       
+        public async Task<IEnumerable<TaskResponseDto>> GetSubtasks(int parentTaskId ,  int userId)
+        {
+
+           var parentTask = await _context.Tasks
+        .Include(t => t.Project)
+            .ThenInclude(p => p.Workspace)
+                .ThenInclude(w => w.UserWorkspaces)
+        .FirstOrDefaultAsync(t => t.TaskId == parentTaskId);
+
+    if (parentTask == null)
+    {
+        throw new KeyNotFoundException("Parent task not found");
     }
+
+    if (!parentTask.Project.Workspace.UserWorkspaces.Any(uw => uw.UserId == userId))
+    {
+        throw new UnauthorizedAccessException("User doesn't have access to this workspace");
+    }
+
+            return await _context.Tasks
+                .Where(t => t.ParentTaskId == parentTaskId)
+                .Include(t => t.CreatedByUser)
+                .Include(t => t.AssignedToUser)
+                .Select(t => new TaskResponseDto
+                {
+                    TaskId = t.TaskId,
+                    ProjectId = t.ProjectId,
+                    Title = "", // Add this if needed in DTO
+                    Description = "", 
+                    Priority = t.Priority,
+                    Status = t.Status,
+                    DueDate = t.DueDate,
+                    CreatedAt = t.CreatedAt,
+                    CreatedByUserId = t.CreatedByUserId,
+                    AssignedToUserId = t.AssignedToUserId,
+                    ParentTaskId = t.ParentTaskId
+                })
+                .ToListAsync();
+        }
+
+}
 }
