@@ -13,5 +13,9 @@ namespace Final_Project_Backend.Services
         Task<IEnumerable<ProjectResponseDto>> GetProjects(int workspaceId , int userId);
         Task<IEnumerable<TaskResponseDto>> GetTasks(int projectId , int userId);
         Task<IEnumerable<TaskResponseDto>> GetSubtasks(int parentTaskId , int userId);
+         Task<Project?> UpdateProject(int userId, int projectId, ProjectUpdateDto dto);
+        Task<bool> DeleteProject(int userId, int projectId);
+        Task<Task?> UpdateTask(int userId, int taskId, TaskUpdateDto dto);
+        Task<bool> DeleteTask(int userId, int taskId);
     }
 }

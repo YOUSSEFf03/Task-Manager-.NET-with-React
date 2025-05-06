@@ -13,5 +13,9 @@ namespace Final_Project_Backend.Services
         Task<Workspace> CreateWorkspace(int userId, WorkspaceCreateDto workspaceDto);
         Task<bool> AddUserToWorkspace(int requestingUserId, int workspaceId, AddUserToWorkspaceDto dto);
         Task<IEnumerable<User>> GetUserWorkspaces(int workspaceId);
+        Task<bool> RemoveUserFromWorkspace(int requestingUserId, int workspaceId, int userIdToRemove);
+
+        Task<Workspace?> UpdateWorkspace(int userId, int workspaceId, WorkspaceUpdateDto dto);
+        Task<bool> DeleteWorkspace(int userId, int workspaceId);
     }
 }

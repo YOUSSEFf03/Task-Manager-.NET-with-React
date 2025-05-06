@@ -148,5 +148,60 @@ public async Task<IEnumerable<User>> GetUserWorkspaces(int workspaceId)
         .Select(wu => wu.User)
         .ToListAsync();
 }
-    }
+    
+
+
+
+    public async Task<bool> RemoveUserFromWorkspace(int requestingUserId, int workspaceId, int userIdToRemove)
+{
+    // Verify requesting user is admin
+    var requestingUserRole = await _context.UserWorkspaces
+        .FirstOrDefaultAsync(uw => uw.WorkspaceId == workspaceId && uw.UserId == requestingUserId);
+
+    if (requestingUserRole?.Role != WorkspaceRole.Admin)
+        return false;
+
+    // Remove user
+    var userWorkspace = await _context.UserWorkspaces
+        .FirstOrDefaultAsync(uw => uw.WorkspaceId == workspaceId && uw.UserId == userIdToRemove);
+
+    if (userWorkspace == null) return false;
+
+    _context.UserWorkspaces.Remove(userWorkspace);
+    await _context.SaveChangesAsync();
+    return true;
+}
+
+
+public async Task<Workspace?> UpdateWorkspace(int userId, int workspaceId, WorkspaceUpdateDto dto)
+{
+    var workspace = await _context.Workspaces
+        .Include(w => w.UserWorkspaces)
+        .FirstOrDefaultAsync(w => w.WorkspaceId == workspaceId);
+
+    if (workspace?.UserWorkspaces.FirstOrDefault(uw => uw.UserId == userId)?.Role != WorkspaceRole.Admin)
+        return null;
+
+    workspace.Name = dto.Name ?? workspace.Name;
+    workspace.Description = dto.Description ?? workspace.Description;
+    
+    await _context.SaveChangesAsync();
+    return workspace;
+}
+
+public async Task<bool> DeleteWorkspace(int userId, int workspaceId)
+{
+    var workspace = await _context.Workspaces
+        .Include(w => w.UserWorkspaces)
+        .FirstOrDefaultAsync(w => w.WorkspaceId == workspaceId);
+
+    if (workspace?.UserWorkspaces.FirstOrDefault(uw => uw.UserId == userId)?.Role != WorkspaceRole.Admin)
+        return false;
+
+    _context.Workspaces.Remove(workspace);
+    await _context.SaveChangesAsync();
+    return true;
+}
+
+}
 }

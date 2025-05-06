@@ -223,5 +223,113 @@ namespace Final_Project_Backend.Services
                 .ToListAsync();
         }
 
+
+
+
+
+        public async Task<Project?> UpdateProject(int userId, int projectId, ProjectUpdateDto dto)
+{
+    var project = await _context.Projects
+        .Include(p => p.Workspace)
+        .ThenInclude(w => w.UserWorkspaces)
+        .FirstOrDefaultAsync(p => p.ProjectId == projectId);
+
+    if (project?.Workspace.UserWorkspaces.FirstOrDefault(uw => uw.UserId == userId) == null)
+        return null;
+
+    project.Name = dto.Name ?? project.Name;
+    project.Description = dto.Description ?? project.Description;
+    project.Status = dto.Status ?? project.Status;
+    
+    await _context.SaveChangesAsync();
+    return project;
+}
+
+
+
+public async Task<bool> DeleteProject(int userId, int projectId)
+{
+    var project = await _context.Projects
+        .Include(p => p.Workspace)
+        .ThenInclude(w => w.UserWorkspaces)
+        .FirstOrDefaultAsync(p => p.ProjectId == projectId);
+
+    if (project?.Workspace.UserWorkspaces.FirstOrDefault(uw => uw.UserId == userId) == null)
+        return false;
+
+    _context.Projects.Remove(project);
+    await _context.SaveChangesAsync();
+    return true;
+}
+
+public async Task<TaskModel?> UpdateTask(int userId, int taskId, TaskUpdateDto taskDto)
+{
+    // Check if task exists and user has permission
+    var task = await _context.Tasks
+        .Include(t => t.Project)
+            .ThenInclude(p => p.Workspace)
+                .ThenInclude(w => w.UserWorkspaces)
+        .FirstOrDefaultAsync(t => t.TaskId == taskId);
+
+    if (task == null)
+    {
+        throw new KeyNotFoundException("Task not found");
+    }
+
+    // Verify user has permission (admin or member)
+    var userRole = task.Project.Workspace.UserWorkspaces
+        .FirstOrDefault(wu => wu.UserId == userId)?.Role;
+
+    if (userRole == null || userRole == WorkspaceRole.Viewer)
+    {
+        throw new UnauthorizedAccessException("User doesn't have permission to edit tasks");
+    }
+
+    // Validate assigned user if provided
+    if (taskDto.AssignedToUserId.HasValue)
+    {
+        var userExists = await _context.Users
+            .AnyAsync(u => u.UserId == taskDto.AssignedToUserId.Value);
+        
+        if (!userExists)
+        {
+            throw new KeyNotFoundException("Assigned user not found");
+        }
+    }
+
+    // Update only the modifiable fields based on your Task model
+    if (taskDto.Priority != null) task.Priority = taskDto.Priority;
+    if (taskDto.Status != null) task.Status = taskDto.Status;
+    if (taskDto.DueDate != null) task.DueDate = taskDto.DueDate;
+    if (taskDto.AssignedToUserId != null) task.AssignedToUserId = taskDto.AssignedToUserId;
+
+    await _context.SaveChangesAsync();
+    return task;
+}
+
+
+
+public async Task<bool> DeleteTask(int userId, int taskId)
+{
+    var task = await _context.Tasks
+        .Include(t => t.Project)
+        .ThenInclude(p => p.Workspace)
+        .ThenInclude(w => w.UserWorkspaces)
+        .FirstOrDefaultAsync(t => t.TaskId == taskId);
+
+    if (task?.Project.Workspace.UserWorkspaces.FirstOrDefault(uw => uw.UserId == userId) == null)
+        return false;
+
+    _context.Tasks.Remove(task);
+    await _context.SaveChangesAsync();
+    return true;
+}
+
+
+
+
+
+
+
 }
 }

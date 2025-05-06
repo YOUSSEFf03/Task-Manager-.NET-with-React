@@ -65,4 +65,55 @@ public class WorkspaceController : ControllerBase
         var users = await _workspaceService.GetUserWorkspaces(workspaceId);
         return Ok(users);
     }
+
+
+
+    [HttpDelete("{workspaceId}/users/{userIdToRemove}")]
+// [Authorize]
+public async Task<IActionResult> RemoveUserFromWorkspace(int workspaceId, int userIdToRemove)
+{
+    var nameIdentifierValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (string.IsNullOrEmpty(nameIdentifierValue))
+    {
+        return Unauthorized("User not authenticated");
+    }
+    var currentUserId = int.Parse(nameIdentifierValue);
+    var result = await _workspaceService.RemoveUserFromWorkspace(currentUserId, workspaceId, userIdToRemove);
+    return result ? NoContent() : BadRequest("Failed to remove user");
+}
+
+
+
+
+
+[HttpPut("{workspaceId}")]
+[Authorize]
+public async Task<IActionResult> UpdateWorkspace(int workspaceId, [FromBody] WorkspaceUpdateDto dto)
+{
+    var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (string.IsNullOrEmpty(userIdClaimValue))
+    {
+        return Unauthorized("User not authenticated");
+    }
+    var userId = int.Parse(userIdClaimValue);
+    var result = await _workspaceService.UpdateWorkspace(userId, workspaceId, dto);
+    return result != null ? Ok(result) : BadRequest("Update failed");
+}
+
+[HttpDelete("{workspaceId}")]
+[Authorize]
+public async Task<IActionResult> DeleteWorkspace(int workspaceId)
+{
+    var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (string.IsNullOrEmpty(userIdClaimValue))
+    {
+        return Unauthorized("User not authenticated");
+    }
+    var userId = int.Parse(userIdClaimValue);
+    var result = await _workspaceService.DeleteWorkspace(userId, workspaceId);
+    return result ? NoContent() : BadRequest("Delete failed");
+}
+
+
+
 }
