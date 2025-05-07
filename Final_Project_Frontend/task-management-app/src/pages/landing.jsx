@@ -9,7 +9,7 @@ export default function Landing() {
         <div>
             <header>
                 <nav className='navbar'>
-                    <Link to="/" className='logo'>
+                    <Link to="/" className='logo' style={{marginLeft: '20px'}}>
                         Taskly
                     </Link>
                     <ul className='navbar-list'>

@@ -35,6 +35,10 @@
     /* font-size: var(--fs-15); */
 }
 
+.login-form .button.primary {
+    padding: var(--padding-10-24);
+}
+
 button.header {
     font-size: var(--fs-14);
     padding: var(--padding-8-24);
@@ -147,4 +151,11 @@ button.header {
     /* background-color: #e8e8e850; */
     background-color: #e8e8e850;
     transition: var(--transition-300);
+}
+
+.profile-dropdown .button.tertiary {
+    box-shadow: inset 0 0 0 2px var(--error-color);
+    color: var(--error-color);
+    font-size: var(--fs-12);
+    width: 100%;
 }
