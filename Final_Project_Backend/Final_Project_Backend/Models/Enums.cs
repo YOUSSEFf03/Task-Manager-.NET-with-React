@@ -8,7 +8,8 @@ namespace Final_Project_Backend.Models
         Unstarted,
         Active,
         Completed,
-        Archived
+        Archived,
+        Removed
     }
 
     public enum TaskPriority
