@@ -1,10 +1,115 @@
-import React from 'react';
+import React, { useState } from 'react';
 import H from '../components/H';
 import Button from '../components/Button';
 import backgroundImage from "../assets/Group 285.png";
 import '../styles/dashboard.css';
 import '../styles/layout.css';
 
+// UserModal Component
+const UserModal = ({ show, onClose }) => {
+    if (!show) return null;
+  
+    const users = [
+      { name: 'Demo User', role: 'Admin' },
+      { name: 'Alex Smith', role: 'Member' },
+      { name: 'Jane Doe', role: 'Viewer' },
+    ];
+  
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0, left: 0,
+        width: '100%',
+        height: '100%',
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+      }}>
+        <div style={{
+          width: '400px',
+          background: '#fff',
+          borderRadius: '8px',
+          boxShadow: 'var(--shadow-light)',
+          padding: '20px',
+          position: 'relative',
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px',
+          }}>
+            <H level={3} style={{ margin: 0 }}>Create Task</H>
+            <button onClick={onClose} style={{
+              background: 'transparent',
+              border: 'none',
+              fontSize: '20px',
+              cursor: 'pointer',
+            }}>×</button>
+          </div>
+  
+          {/* Task Fields */}
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ fontSize: '14px', color: '#555' }}>Task Name</label>
+            <input type="text" placeholder="Enter task name" style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '6px',
+              border: '1px solid #ccc',
+              marginTop: '8px',
+            }} />
+          </div>
+  
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ fontSize: '14px', color: '#555' }}>Description</label>
+            <textarea placeholder="Enter task description" style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '6px',
+              border: '1px solid #ccc',
+              marginTop: '8px',
+              height: '80px',
+            }} />
+          </div>
+  
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ fontSize: '14px', color: '#555' }}>Assign To</label>
+            <select style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '6px',
+              border: '1px solid #ccc',
+              marginTop: '8px',
+            }}>
+              {users.map((user, idx) => (
+                <option key={idx} value={user.name}>{user.name}</option>
+              ))}
+            </select>
+          </div>
+  
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ fontSize: '14px', color: '#555' }}>Due Date (Optional)</label>
+            <input type="date" style={{
+              width: '100%',
+              padding: '8px',
+              borderRadius: '6px',
+              border: '1px solid #ccc',
+              marginTop: '8px',
+            }} />
+          </div>
+  
+          <div style={{ textAlign: 'center' }}>
+            <Button text="Create Task" color="primary" style={{ padding: '10px 20px', fontSize: '14px' }} />
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+
+// TaskCard Component
 const TaskCard = ({ name, assignedTo, tag }) => {
   const tagColors = {
     frontend: '#FF6B6B',
@@ -32,7 +137,10 @@ const TaskCard = ({ name, assignedTo, tag }) => {
   );
 };
 
+// Main ProjectPage
 const ProjectPage = () => {
+  const [showModal, setShowModal] = useState(false);
+
   const tasks = {
     todo: [
       { name: 'Design Login Page', assignedTo: 'Jane Doe', tag: 'design' },
@@ -50,6 +158,9 @@ const ProjectPage = () => {
 
   return (
     <div style={{ fontFamily: 'Poppins, sans-serif', padding: '24px' }}>
+      {/* Modal */}
+      <UserModal show={showModal} onClose={() => setShowModal(false)} />
+
       {/* Banner section */}
       <div className="banner-dashboard" style={{
         background: `url(${backgroundImage})`,
@@ -81,6 +192,7 @@ const ProjectPage = () => {
             text="Add Task"
             color="primary"
             style={{ padding: '6px 12px', fontSize: '14px' }}
+            onClick={() => setShowModal(true)}
           />
         </div>
       </div>
