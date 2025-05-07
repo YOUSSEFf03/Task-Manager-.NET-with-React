@@ -104,7 +104,7 @@ public async Task<IActionResult> CreateSubtask(int taskId, [FromBody] SubtaskCre
         return StatusCode(StatusCodes.Status500InternalServerError, new { error = "An unexpected error occurred" });
     }
 }
-    [HttpGet("{workspaceId}/projects")]
+    [HttpGet("workspaces/{workspaceId}")]
     public async Task<IActionResult> GetProjects(int workspaceId)
     {   
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
