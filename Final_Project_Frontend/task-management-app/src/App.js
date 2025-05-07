@@ -21,7 +21,7 @@ function App() {
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/workspace/:workspaceId" element={<Workspace />} />
-          <Route path="/project" element={<ProjectPage />} />
+          <Route path="/project/:projectId" element={<ProjectPage />} />
         </Route>
       </Routes>
       <ToastContainer position="top-right" autoClose={3000} />

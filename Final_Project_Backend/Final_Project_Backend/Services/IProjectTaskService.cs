@@ -12,6 +12,7 @@ namespace Final_Project_Backend.Services
         Task<Task> CreateTask(int userId, int projectId, TaskCreateDto taskDto);
         Task<Task> CreateSubtask(int userId, int taskId, SubtaskCreateDto subtaskDto);
         Task<IEnumerable<ProjectResponseDto>> GetProjects(int workspaceId, int userId);
+        Task<ProjectResponseDto?> GetProjectById(int userId, int projectId);
         Task<IEnumerable<TaskResponseDto>> GetTasks(int projectId, int userId);
         Task<IEnumerable<TaskResponseDto>> GetSubtasks(int parentTaskId, int userId);
         Task<Project?> UpdateProject(int userId, int projectId, ProjectUpdateDto dto);
@@ -23,8 +24,6 @@ namespace Final_Project_Backend.Services
         Task<Comment?> AddCommentToTask(int userId, int taskId, string content);
         Task<bool> MentionUserInComment(int commentId, int mentionedUserId);
         Task<IEnumerable<Comment>> GetCommentsByTask(int taskId);
-
-        
-
+        Task<IEnumerable<WorkspaceUserResponseDto>> GetWorkspaceUsers(int workspaceId, int userId);
     }
 }

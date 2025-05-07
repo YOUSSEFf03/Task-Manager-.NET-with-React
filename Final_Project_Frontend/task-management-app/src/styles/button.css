@@ -39,11 +39,11 @@
     padding: var(--padding-10-24);
 }
 
-.banner-content-dashboard .button.primary {
+.banner-content-dashboard .button.primary, .banner-content-dashboard .button.primary {
     width: fit-content;
 }
 
-.modal-workspace-create .button.primary {
+.modal-workspace-create .button.primary, .add-task-modal .button.primary {
     width: 100%;
 }
 

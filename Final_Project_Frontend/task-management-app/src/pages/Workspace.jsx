@@ -5,7 +5,7 @@ import '../styles/inputSearch.css';
 import backgroundImage from "../assets/Group 285.png";
 import '../styles/dashboard.css';
 import '../styles/layout.css';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const statusLabels = {
@@ -16,7 +16,9 @@ const statusLabels = {
   4: "Removed",
 };
 
-const ProjectCard = ({ name, description, deadline, status }) => {
+const ProjectCard = ({ projectId, name, description, deadline, status }) => {
+  const navigate = useNavigate();
+
   const statusColors = {
     unstarted: 'var(--neutral-500)',
     active: 'var(--warning-color)',
@@ -28,19 +30,25 @@ const ProjectCard = ({ name, description, deadline, status }) => {
 
   const statusLabel = statusLabels[status];
 
+  const handleCardClick = () => {
+    navigate(`/project/${projectId}`);
+  };
+
   return (
-    <div style={{
-      backgroundColor: '#fff',
-      borderRadius: '6px',
-      padding: '16px',
-      width: '250px',
-      margin: '12px',
-      boxShadow: 'var(--shadow-light)',
-      borderLeft: `6px solid ${statusColors[statusLabel?.toLowerCase()] || statusColors.default}`,
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between'
-    }}>
+    <div onClick={handleCardClick}
+      style={{
+        backgroundColor: '#fff',
+        borderRadius: '6px',
+        padding: '16px',
+        width: '250px',
+        margin: '12px',
+        boxShadow: 'var(--shadow-light)',
+        borderLeft: `6px solid ${statusColors[statusLabel?.toLowerCase()] || statusColors.default}`,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        cursor: 'pointer',
+      }}>
       <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#333' }}>{name}</h3>
       <p style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>{description}</p>
       <p style={{ fontSize: '12px', color: '#999', margin: 0 }}>Deadline: {deadline}</p>
@@ -102,7 +110,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h3 style={{margin: 0}}>Create Project</h3>
+        <h3 style={{ margin: 0 }}>Create Project</h3>
         <div>
           <label htmlFor="projectName" style={{ display: 'block', fontSize: '14px' }}>Project Name</label>
           <input
@@ -277,6 +285,7 @@ const Workspace = () => {
           filteredProjects.map((project) => (
             <ProjectCard
               key={project.projectId}
+              projectId={project.projectId}
               name={project.name}
               description={project.description}
               deadline={project.deadline}

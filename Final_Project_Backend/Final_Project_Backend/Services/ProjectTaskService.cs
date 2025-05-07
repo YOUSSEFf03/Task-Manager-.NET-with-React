@@ -61,9 +61,9 @@ namespace Final_Project_Backend.Services
                 throw new UnauthorizedAccessException("User is not part of the workspace"); // Throw exception if the user is not part of the workspace
 
             // Validate assigned user
-            if (taskDto.AssignedToUserId.HasValue && 
-                !await _context.UserWorkspaces.AnyAsync(uw => 
-                    uw.UserId == taskDto.AssignedToUserId.Value && 
+            if (taskDto.AssignedToUserId.HasValue &&
+                !await _context.UserWorkspaces.AnyAsync(uw =>
+                    uw.UserId == taskDto.AssignedToUserId.Value &&
                     uw.WorkspaceId == workspaceId))
             {
                 throw new InvalidOperationException("Assigned user is not part of the workspace");
@@ -112,7 +112,7 @@ namespace Final_Project_Backend.Services
 
             // Check if user has access to the workspace
             bool hasAccess = await _context.UserWorkspaces
-                .AnyAsync(uw => uw.UserId == userId && 
+                .AnyAsync(uw => uw.UserId == userId &&
                                uw.WorkspaceId == parentTask.Project.WorkspaceId);
 
             if (!hasAccess)
@@ -243,7 +243,7 @@ namespace Final_Project_Backend.Services
 
             project.Name = dto.Name ?? project.Name;
             project.Description = dto.Description ?? project.Description;
-            
+
             if (dto.Status != null && Enum.TryParse(dto.Status, out ProjectStatus status))
                 project.Status = status;
 
@@ -280,8 +280,8 @@ namespace Final_Project_Backend.Services
 
             if (dto.AssignedToUserId.HasValue)
             {
-                if (await _context.UserWorkspaces.AnyAsync(uw => 
-                    uw.UserId == dto.AssignedToUserId.Value && 
+                if (await _context.UserWorkspaces.AnyAsync(uw =>
+                    uw.UserId == dto.AssignedToUserId.Value &&
                     uw.WorkspaceId == task.Project.WorkspaceId))
                 {
                     task.AssignedToUserId = dto.AssignedToUserId;
@@ -361,7 +361,7 @@ namespace Final_Project_Backend.Services
 
             // Check if mentioned user is in the same workspace
             var isInWorkspace = await _context.UserWorkspaces
-                .AnyAsync(uw => uw.UserId == mentionedUserId && 
+                .AnyAsync(uw => uw.UserId == mentionedUserId &&
                                uw.WorkspaceId == comment.Task.Project.WorkspaceId);
 
             if (isInWorkspace)
@@ -399,6 +399,52 @@ namespace Final_Project_Backend.Services
         {
             // Logic to extract mentioned user IDs from the content
             return new List<int>();
+        }
+
+        public async Task<ProjectResponseDto?> GetProjectById(int userId, int projectId)
+        {
+            var project = await _context.Projects
+                .Where(p => p.ProjectId == projectId)
+                .Select(p => new ProjectResponseDto
+                {
+                    ProjectId = p.ProjectId,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Status = p.Status.ToString(),
+                    WorkspaceId = p.WorkspaceId,
+                    CreatedByUserId = p.CreatedByUserId,
+                    CreatedAt = p.CreatedAt
+                })
+                .FirstOrDefaultAsync();
+
+            if (project == null)
+            {
+                return null;
+            }
+
+            // Verify the user has access to the workspace
+            var hasPermission = await HasWorkspacePermission(userId, project.WorkspaceId);
+            return hasPermission ? project : null;
+        }
+
+        public async Task<IEnumerable<WorkspaceUserResponseDto>> GetWorkspaceUsers(int workspaceId, int userId)
+        {
+            if (!await HasWorkspacePermission(userId, workspaceId))
+                throw new UnauthorizedAccessException("User doesn't have permission to access the workspace");
+
+            var users = await _context.UserWorkspaces
+                .Where(uw => uw.WorkspaceId == workspaceId &&
+                             (uw.Role == WorkspaceRole.Admin || uw.Role == WorkspaceRole.Member))
+                .Select(uw => new WorkspaceUserResponseDto
+                {
+                    UserId = uw.UserId,
+                    FullName = uw.User.FullName,
+                    Email = uw.User.Email,
+                    Role = uw.Role.ToString() // Include role only in this DTO
+                })
+                .ToListAsync();
+
+            return users;
         }
     }
 }
