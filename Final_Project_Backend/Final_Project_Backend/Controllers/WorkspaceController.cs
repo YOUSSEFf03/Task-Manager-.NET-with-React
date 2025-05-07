@@ -170,7 +170,7 @@ public class WorkspaceController : ControllerBase
             return Unauthorized("User not authenticated");
         }
         var userId = int.Parse(userIdClaim.Value);
-
+        
         var comment = await _workspaceService.AddCommentToTask(userId, taskId, dto.Content);
         return comment != null ? Ok(comment) : BadRequest("Failed to add comment");
     }

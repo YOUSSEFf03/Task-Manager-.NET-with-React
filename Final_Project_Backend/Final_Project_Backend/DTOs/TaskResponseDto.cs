@@ -16,7 +16,7 @@ namespace Final_Project_Backend.DTOs
         public DateTime CreatedAt { get; set; }
         
         // Additional fields if needed
-        public string? Title { get; set; }
+        public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
     
         public TaskResponseDto() 
