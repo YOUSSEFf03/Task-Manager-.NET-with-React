@@ -16,15 +16,18 @@ public class WorkspaceController : ControllerBase
         _workspaceService = workspaceService;
     }
 
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> GetWorkspaces()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        Console.WriteLine($"User ID Claim: {userIdClaim}");
         if (userIdClaim == null)
         {
             return Unauthorized("User not authenticated");
         }
         var userId = int.Parse(userIdClaim.Value);
+        Console.WriteLine($"User ID: {userId}");
 
         var workspaces = await _workspaceService.GetWorkspaceDtosByUser(userId);
 
@@ -194,7 +197,7 @@ public class WorkspaceController : ControllerBase
     }
 
     [HttpGet("projects/{projectId}/comments")]
-    
+
 
     [HttpGet("tasks/{taskId}/comments")]
     public async Task<IActionResult> GetCommentsByTask(int taskId)

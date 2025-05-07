@@ -43,6 +43,10 @@
     width: fit-content;
 }
 
+.modal-workspace-create .button.primary {
+    width: 100%;
+}
+
 button.header {
     font-size: var(--fs-14);
     padding: var(--padding-8-24);
