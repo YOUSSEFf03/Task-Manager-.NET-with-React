@@ -27,5 +27,7 @@ namespace Final_Project_Backend.Services
         Task<Comment?> AddCommentToTask(int userId, int taskId, string content);
         Task<bool> MentionUserInComment(int commentId, int mentionedUserId);
         Task<IEnumerable<Comment>> GetCommentsByTask(int taskId);
+
+        Task<IEnumerable<User>> SearchUsers(string query);
     }
 }

@@ -317,5 +317,12 @@ namespace Final_Project_Backend.Services
                 .Where(c => c.TaskId == taskId)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<User>> SearchUsers(string query)
+        {
+            return await _context.Users
+                .Where(u => u.FullName.Contains(query) || u.Email.Contains(query))
+                .ToListAsync();
+        }
     }
 }

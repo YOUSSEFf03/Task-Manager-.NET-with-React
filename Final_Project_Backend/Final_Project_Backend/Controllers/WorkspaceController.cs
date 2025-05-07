@@ -210,4 +210,22 @@ public class WorkspaceController : ControllerBase
         var comments = await _workspaceService.GetCommentsByTask(taskId);
         return Ok(comments);
     }
+
+    [HttpGet("search-users")]
+    public async Task<IActionResult> SearchUsers([FromQuery] string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return BadRequest(new { error = "Query parameter is required." });
+        }
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+
+        var users = await _workspaceService.SearchUsers(query);
+        return Ok(users);
+    }
 }
