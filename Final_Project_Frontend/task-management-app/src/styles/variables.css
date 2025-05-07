@@ -124,6 +124,7 @@
     --radius-full: 50% 50%;
 
     /* Shadows */
+    --shadow-light: 0px 4px 16px 0px rgba(178, 178, 178, 0.15);
     --shadow-1: 0px 8px 28px 0px rgba(178, 178, 178, 0.25);
     --shadow-2: 0px 8px 30px 5px rgb(182, 182, 182, 0.25);
 

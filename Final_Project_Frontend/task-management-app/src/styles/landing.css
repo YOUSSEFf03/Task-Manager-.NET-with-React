@@ -78,7 +78,7 @@
     gap: var(--gap-24);
     /* background: var(--gradient-lavender-pink); */
     background: url('../assets/blurry-gradient-haikei.svg');
-    height: 90vh;
+    height: 92.5vh;
     margin: 8px;
     padding: 12px 64px;
     border-radius: var(--radius-8);

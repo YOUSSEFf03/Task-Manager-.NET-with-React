@@ -4,6 +4,7 @@ import Landing from './pages/landing';
 import Login from './pages/login';
 import Signup from './pages/signup';
 import Dashboard from './pages/Dashboard';
+import Workspace from './pages/Workspace';
 import Layout from './app/layout';
 import './styles/variables.css';
 import { ToastContainer } from 'react-toastify';
@@ -18,6 +19,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/workspace" element={<Workspace />} />
         </Route>
       </Routes>
       <ToastContainer position="top-right" autoClose={3000} />
