@@ -124,95 +124,32 @@ public class WorkspaceController : ControllerBase
         return Ok(roleCounts);
     }
 
-    [HttpPost("{workspaceId}/tags")]
-    public async Task<IActionResult> CreateTag(int workspaceId, [FromBody] CreateTagDto dto)
+   [HttpPost("{workspaceId}/tags")]
+public async Task<IActionResult> CreateTag(int workspaceId, [FromBody] CreateTagDto dto)
+{
+    var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (string.IsNullOrEmpty(userIdClaimValue))
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
-        {
-            return Unauthorized("User not authenticated");
-        }
-        var userId = int.Parse(userIdClaim.Value);
-
-        var result = await _workspaceService.CreateTag(userId, workspaceId, dto);
-        return result != null ? Ok(result) : BadRequest("Failed to create tag");
+        return Unauthorized("User not authenticated");
     }
+    var userId = int.Parse(userIdClaimValue);
+    var tag = await _workspaceService.CreateTag(userId, workspaceId, dto);
+    return tag != null ? Ok(tag) : Forbid(); 
+}
 
-    [HttpPost("tasks/{taskId}/tags/{tagId}")]
-    public async Task<IActionResult> AssignTagToTask(int taskId, int tagId)
+[HttpPost("tasks/{taskId}/tags/{tagId}")]
+public async Task<IActionResult> AssignTagToTask(int taskId, int tagId)
+{
+    var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (string.IsNullOrEmpty(userIdClaimValue))
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
-        {
-            return Unauthorized("User not authenticated");
-        }
-        var userId = int.Parse(userIdClaim.Value);
-
-        // Ensure the user has access to the workspace via _workspaceService.GetUserWorkspaces
-        var hasAccess = await _workspaceService.HasAccessToTaskWorkspace(userId, taskId);
-        if (!hasAccess)
-        {
-            return Forbid("User does not have access to the workspace");
-        }
-
-        var result = await _workspaceService.AssignTagToTask(userId, taskId, tagId);
-        return result ? NoContent() : BadRequest("Failed to assign tag to task");
+        return Unauthorized("User not authenticated");
     }
+    var userId = int.Parse(userIdClaimValue);
+    var success = await _workspaceService.AssignTagToTask(userId, taskId, tagId);
+    return success ? NoContent() : Forbid(); // 403 if no permission
+}
 
-    [HttpPost("tasks/{taskId}/comments")]
-    public async Task<IActionResult> AddCommentToTask(int taskId, [FromBody] AddCommentDto dto)
-    {
-        if (dto == null || string.IsNullOrWhiteSpace(dto.Content))
-        {
-            return BadRequest(new { error = "The content field is required." });
-        }
-
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
-        {
-            return Unauthorized("User not authenticated");
-        }
-        var userId = int.Parse(userIdClaim.Value);
-
-        var comment = await _workspaceService.AddCommentToTask(userId, taskId, dto.Content);
-        return comment != null ? Ok(comment) : BadRequest("Failed to add comment");
-    }
-
-    [HttpPost("comments/{commentId}/mentions")]
-    public async Task<IActionResult> MentionUserInComment(int commentId, [FromBody] MentionUserDto dto)
-    {
-        if (dto == null || dto.MentionedUserId <= 0)
-        {
-            return BadRequest(new { error = "Invalid mentionedUserId." });
-        }
-
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
-        {
-            return Unauthorized("User not authenticated");
-        }
-
-        var result = await _workspaceService.MentionUserInComment(commentId, dto.MentionedUserId);
-        return result ? NoContent() : BadRequest("Failed to mention user");
-    }
-
-    [HttpGet("projects/{projectId}/comments")]
-
-
-    [HttpGet("tasks/{taskId}/comments")]
-    public async Task<IActionResult> GetCommentsByTask(int taskId)
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
-        {
-            return Unauthorized("User not authenticated");
-        }
-        var userId = int.Parse(userIdClaim.Value);
-
-        // Ensure the user has access to the task
-        var comments = await _workspaceService.GetCommentsByTask(taskId);
-        return Ok(comments);
-    }
 
     [HttpGet("search-users")]
     public async Task<IActionResult> SearchUsers([FromQuery] string query)

@@ -163,6 +163,36 @@ public async Task<IActionResult> DeleteTask(int taskId)
 }
 
 
+[HttpPost("tasks/{taskId}/comments")]
+public async Task<IActionResult> AddCommentToTask(int taskId, [FromBody] AddCommentDto dto)
+{
+    if (string.IsNullOrWhiteSpace(dto?.Content))
+    {
+        return BadRequest("Content is required");
+    }
+
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+    if (userIdClaim == null) return Unauthorized();
+    
+    var userId = int.Parse(userIdClaim.Value);
+    var comment = await _projectTaskService.AddCommentToTask(userId, taskId, dto.Content);
+    return comment != null ? Ok(comment) : BadRequest("Failed to add comment");
+}
+
+[HttpPost("comments/{commentId}/mentions/{mentionedUserId}")]
+public async Task<IActionResult> MentionUserInComment(int commentId, int mentionedUserId)
+{
+    var result = await _projectTaskService.MentionUserInComment(commentId, mentionedUserId);
+    return result ? NoContent() : BadRequest("Failed to mention user");
+}
+
+[HttpGet("tasks/{taskId}/comments")]
+public async Task<IActionResult> GetCommentsByTask(int taskId)
+{
+    var comments = await _projectTaskService.GetCommentsByTask(taskId);
+    return Ok(comments);
+}
+
 
 
 

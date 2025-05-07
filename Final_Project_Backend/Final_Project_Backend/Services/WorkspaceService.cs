@@ -245,54 +245,62 @@ namespace Final_Project_Backend.Services
         }
 
         public async Task<Tag?> CreateTag(int userId, int workspaceId, CreateTagDto dto)
-        {
-            var workspace = await _context.Workspaces
-                .FirstOrDefaultAsync(w => w.WorkspaceId == workspaceId && w.CreatedByUserId == userId);
+{
+    // Check if user has Admin/Member role in the workspace
+    var userWorkspace = await _context.UserWorkspaces
+        .FirstOrDefaultAsync(uw => uw.UserId == userId && uw.WorkspaceId == workspaceId);
 
-            if (workspace == null)
-                return null;
+    // Deny if user is not in workspace or is a Viewer
+    if (userWorkspace == null || userWorkspace.Role == WorkspaceRole.Viewer)
+        return null;
 
-            var tag = new Tag
-            {
-                Name = dto.Name,
-                Color = dto.Color,
-                CreatedByUserId = userId,
-                WorkspaceId = workspaceId,
-                CreatedByUser = await _userRepository.GetUserByIdAsync(userId),
-                Workspace = workspace
-            };
+    var tag = new Tag
+    {
+        Name = dto.Name,
+        Color = dto.Color,
+        CreatedByUserId = userId,
+        WorkspaceId = workspaceId,
+        CreatedByUser = userWorkspace.User,
+        Workspace = userWorkspace.Workspace
+    };
 
-            _context.Tags.Add(tag);
-            await _context.SaveChangesAsync();
+    _context.Tags.Add(tag);
+    await _context.SaveChangesAsync();
+    return tag;
+}
 
-            return tag;
-        }
+public async Task<bool> AssignTagToTask(int userId, int taskId, int tagId)
+{
+    // Get task and include its project/workspace
+    var task = await _context.Tasks
+        .Include(t => t.Project)
+        .ThenInclude(p => p.Workspace)
+        .FirstOrDefaultAsync(t => t.TaskId == taskId);
 
-        public async Task<bool> AssignTagToTask(int userId, int taskId, int tagId)
-        {
-            var task = await _context.Tasks
-                .Include(t => t.Project)
-                .FirstOrDefaultAsync(t => t.TaskId == taskId);
+    if (task == null) 
+        return false;
 
-            if (task == null || task.Project.CreatedByUserId != userId)
-                return false;
+    // Check if user has Admin/Member access to the workspace
+    bool hasPermission = await _context.UserWorkspaces
+        .AnyAsync(uw => uw.UserId == userId && 
+                       uw.WorkspaceId == task.Project.WorkspaceId && 
+                       uw.Role != WorkspaceRole.Viewer);
 
-            var tag = await _context.Tags.FirstOrDefaultAsync(t => t.TagId == tagId);
-            if (tag == null || tag.WorkspaceId != task.Project.WorkspaceId)
-                return false;
+    if (!hasPermission)
+        return false;
 
-            var taskTag = new TaskTag
-            {
-                TaskId = taskId,
-                TagId = tagId
-            };
+    // Verify tag exists in the same workspace
+    var tag = await _context.Tags
+        .FirstOrDefaultAsync(t => t.TagId == tagId && t.WorkspaceId == task.Project.WorkspaceId);
 
-            _context.TaskTags.Add(taskTag);
-            await _context.SaveChangesAsync();
+    if (tag == null)
+        return false;
 
-            return true;
-        }
-
+    // Assign tag
+    _context.TaskTags.Add(new TaskTag { TaskId = taskId, TagId = tagId });
+    await _context.SaveChangesAsync();
+    return true;
+}
         public async Task<bool> HasAccessToTaskWorkspace(int userId, int taskId)
         {
             // Get the task and include its project and workspace
@@ -311,62 +319,62 @@ namespace Final_Project_Backend.Services
             return isUserInWorkspace;
         }
 
-        public async Task<Comment?> AddCommentToTask(int userId, int taskId, string content)
-        {
-            var task = await _context.Tasks
-                .Include(t => t.Project)
-                .FirstOrDefaultAsync(t => t.TaskId == taskId);
+        // public async Task<Comment?> AddCommentToTask(int userId, int taskId, string content)
+        // {
+        //     var task = await _context.Tasks
+        //         .Include(t => t.Project)
+        //         .FirstOrDefaultAsync(t => t.TaskId == taskId);
 
-            if (task == null)
-                return null;
+        //     if (task == null)
+        //         return null;
 
-            var comment = new Comment
-            {
-                TaskId = taskId,
-                UserId = userId,
-                Content = content,
-                CreatedAt = DateTime.UtcNow
-            };
+        //     var comment = new Comment
+        //     {
+        //         TaskId = taskId,
+        //         UserId = userId,
+        //         Content = content,
+        //         CreatedAt = DateTime.UtcNow
+        //     };
 
-            _context.Comments.Add(comment);
-            await _context.SaveChangesAsync();
+        //     _context.Comments.Add(comment);
+        //     await _context.SaveChangesAsync();
 
-            return comment;
-        }
+        //     return comment;
+        // }
 
-        public async Task<bool> MentionUserInComment(int commentId, int mentionedUserId)
-        {
-            var comment = await _context.Comments
-                .Include(c => c.Task)
-                .ThenInclude(t => t.Project)
-                .FirstOrDefaultAsync(c => c.CommentId == commentId);
+        // public async Task<bool> MentionUserInComment(int commentId, int mentionedUserId)
+        // {
+        //     var comment = await _context.Comments
+        //         .Include(c => c.Task)
+        //         .ThenInclude(t => t.Project)
+        //         .FirstOrDefaultAsync(c => c.CommentId == commentId);
 
-            if (comment == null)
-                return false;
+        //     if (comment == null)
+        //         return false;
 
-            var mention = new Mention
-            {
-                CommentId = commentId,
-                UserId = mentionedUserId,
-                MentionedAt = DateTime.UtcNow
-            };
+        //     var mention = new Mention
+        //     {
+        //         CommentId = commentId,
+        //         UserId = mentionedUserId,
+        //         MentionedAt = DateTime.UtcNow
+        //     };
 
-            _context.Mentions.Add(mention);
-            await _context.SaveChangesAsync();
+        //     _context.Mentions.Add(mention);
+        //     await _context.SaveChangesAsync();
 
-            return true;
-        }
-
-
+        //     return true;
+        // }
 
 
-        public async Task<IEnumerable<Comment>> GetCommentsByTask(int taskId)
-        {
-            return await _context.Comments
-                .Include(c => c.User)
-                .Where(c => c.TaskId == taskId)
-                .ToListAsync();
-        }
+
+
+        // public async Task<IEnumerable<Comment>> GetCommentsByTask(int taskId)
+        // {
+        //     return await _context.Comments
+        //         .Include(c => c.User)
+        //         .Where(c => c.TaskId == taskId)
+        //         .ToListAsync();
+        // }
 
         public async Task<IEnumerable<User>> SearchUsers(string query)
         {
@@ -376,13 +384,11 @@ namespace Final_Project_Backend.Services
         }
 
 
-        public async Task<bool> IsWorkspaceAdmin(int userId, int workspaceId)
-        {
-            var userWorkspace = await _context.UserWorkspaces
-                .FirstOrDefaultAsync(uw => uw.UserId == userId && uw.WorkspaceId == workspaceId);
-
-            return userWorkspace?.Role == WorkspaceRole.Admin;
-        }
+public async Task<bool> IsWorkspaceAdmin(int userId, int workspaceId) {
+    var userWorkspace = await _context.UserWorkspaces
+        .FirstOrDefaultAsync(uw => uw.UserId == userId && uw.WorkspaceId == workspaceId);
+    return userWorkspace?.Role == WorkspaceRole.Admin;
+}
 
 
 
