@@ -16,23 +16,28 @@ public class WorkspaceController : ControllerBase
         _workspaceService = workspaceService;
     }
 
-    [Authorize]
-    [HttpGet]
-    public async Task<IActionResult> GetWorkspaces()
+  [Authorize]
+[HttpGet]
+public async Task<IActionResult> GetWorkspaces()
+{
+    try
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        Console.WriteLine($"User ID Claim: {userIdClaim}");
         if (userIdClaim == null)
         {
-            return Unauthorized("User not authenticated");
+            return Unauthorized(new { error = "User not authenticated" });
         }
+        
         var userId = int.Parse(userIdClaim.Value);
-        Console.WriteLine($"User ID: {userId}");
-
         var workspaces = await _workspaceService.GetWorkspaceDtosByUser(userId);
-
         return Ok(workspaces);
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error getting workspaces: {ex.Message}");
+        return StatusCode(500, new { error = "Internal server error" });
+    }
+}
 
     [HttpPost]
     public async Task<IActionResult> CreateWorkspace([FromBody] WorkspaceCreateDto workspaceDto)
@@ -69,67 +74,116 @@ public async Task<IActionResult> AddUserToWorkspace(int workspaceId, [FromBody] 
     }
 }
 
-    [HttpGet("{workspaceId}/users")]
-    public async Task<IActionResult> GetUserWorkspaces(int workspaceId)
+   [HttpGet("{workspaceId}/users")]
+public async Task<IActionResult> GetUserWorkspaces(int workspaceId)
+{
+    try
     {
         var users = await _workspaceService.GetUserWorkspaces(workspaceId);
         return Ok(users);
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error getting workspace users: {ex.Message}");
+        return StatusCode(500, new { error = "Failed to retrieve workspace users" });
+    }
+}
 
     [HttpDelete("{workspaceId}/users/{userIdToRemove}")]
-    public async Task<IActionResult> RemoveUserFromWorkspace(int workspaceId, int userIdToRemove)
+public async Task<IActionResult> RemoveUserFromWorkspace(int workspaceId, int userIdToRemove)
+{
+    try
     {
         var nameIdentifierValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(nameIdentifierValue))
         {
-            return Unauthorized("User not authenticated");
+            return Unauthorized(new { error = "User not authenticated" });
         }
+        
         var currentUserId = int.Parse(nameIdentifierValue);
         var result = await _workspaceService.RemoveUserFromWorkspace(currentUserId, workspaceId, userIdToRemove);
-        return result ? NoContent() : BadRequest("Failed to remove user");
+        
+        return result ? NoContent() 
+            : StatusCode(403, new { error = "Failed to remove user - check permissions" });
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error removing user: {ex.Message}");
+        return StatusCode(500, new { error = "Failed to remove user" });
+    }
+}
 
     [HttpPut("{workspaceId}")]
     [Authorize]
-    public async Task<IActionResult> UpdateWorkspace(int workspaceId, [FromBody] WorkspaceUpdateDto dto)
+public async Task<IActionResult> UpdateWorkspace(int workspaceId, [FromBody] WorkspaceUpdateDto dto)
+{
+    try
     {
         var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaimValue))
         {
-            return Unauthorized("User not authenticated");
+            return Unauthorized(new { error = "User not authenticated" });
         }
+        
         var userId = int.Parse(userIdClaimValue);
         var result = await _workspaceService.UpdateWorkspace(userId, workspaceId, dto);
-        return result != null ? Ok(result) : BadRequest("Update failed");
+        
+        return result != null ? Ok(result) 
+            : StatusCode(403, new { error = "Update failed - check permissions" });
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error updating workspace: {ex.Message}");
+        return StatusCode(500, new { error = "Failed to update workspace" });
+    }
+}
 
-    [HttpDelete("{workspaceId}")]
-    [Authorize]
-    public async Task<IActionResult> DeleteWorkspace(int workspaceId)
+[HttpDelete("{workspaceId}")]
+[Authorize]
+public async Task<IActionResult> DeleteWorkspace(int workspaceId)
+{
+    try
     {
         var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaimValue))
         {
-            return Unauthorized("User not authenticated");
+            return Unauthorized(new { error = "User not authenticated" });
         }
+        
         var userId = int.Parse(userIdClaimValue);
         var result = await _workspaceService.DeleteWorkspace(userId, workspaceId);
-        return result ? NoContent() : BadRequest("Delete failed");
+        
+        return result ? NoContent() 
+            : StatusCode(403, new { error = "Delete failed - check permissions" });
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error deleting workspace: {ex.Message}");
+        return StatusCode(500, new { error = "Failed to delete workspace" });
+    }
+}
 
-    [HttpGet("count-by-role")]
-    public async Task<IActionResult> CountWorkspacesByRole()
+[HttpGet("count-by-role")]
+public async Task<IActionResult> CountWorkspacesByRole()
+{
+    try
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
         {
-            return Unauthorized("User not authenticated");
+            return Unauthorized(new { error = "User not authenticated" });
         }
+        
         var userId = int.Parse(userIdClaim.Value);
-
         var roleCounts = await _workspaceService.CountWorkspacesByRole(userId);
         return Ok(roleCounts);
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error counting workspaces by role: {ex.Message}");
+        return StatusCode(500, new { error = "Failed to count workspaces by role" });
+    }
+}
 
  
 [HttpPost("{workspaceId}/tags")]
@@ -217,5 +271,10 @@ public async Task<IActionResult> AssignTagToTask(int taskId, int tagId)
             Console.WriteLine($"Error retrieving workspace: {ex.Message}");
             return StatusCode(500, "Internal server error");
         }
+
+
+
     }
+
+
 }

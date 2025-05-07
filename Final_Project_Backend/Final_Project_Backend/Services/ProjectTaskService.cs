@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+// Removed duplicate using directive for Final_Project_Backend.Models
 using System.Threading.Tasks;
 
 namespace Final_Project_Backend.Services
