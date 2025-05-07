@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import '../styles/layout.css';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import H from '../components/H.jsx';
 import Button from '../components/Button.jsx';
 
 const Layout = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [initials, setInitials] = useState('');
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
@@ -47,6 +48,8 @@ const Layout = () => {
         navigate('/');
     };
 
+    const isWorkspacePage = location.pathname === '/workspace';
+
     return (
         <div className="app-container">
             <header className="navbar-layout">
@@ -60,6 +63,15 @@ const Layout = () => {
                         </svg>
                         <span className="notification-badge"></span>
                     </div>
+
+                    {isWorkspacePage && (
+                        <div className='user-control-icon'>
+                            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M10 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h2m10 1a3 3 0 0 1-3 3m3-3a3 3 0 0 0-3-3m3 3h1m-4 3a3 3 0 0 1-3-3m3 3v1m-3-4a3 3 0 0 1 3-3m-3 3h-1m4-3v-1m-2.121 1.879-.707-.707m5.656 5.656-.707-.707m-4.242 0-.707.707m5.656-5.656-.707.707M12 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            </svg>
+                        </div>
+                    )}
+
                     <div className='user-circle' onClick={() => setMenuOpen(!menuOpen)}>
                         <p>{initials}</p>
                         {menuOpen && (

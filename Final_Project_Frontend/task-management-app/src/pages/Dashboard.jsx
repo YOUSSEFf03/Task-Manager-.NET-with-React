@@ -1,21 +1,24 @@
 import React, { useState } from 'react';
-import H from '../components/H'; // Assuming this is the correct path
+import H from '../components/H';
 import Button from '../components/Button';
+import '../styles/inputSearch.css';
+import backgroundImage from "../assets/Group 285.png";
+import '../styles/dashboard.css';
 
 const WorkspaceCard = ({ name, description }) => {
   const cardStyle = {
     display: 'flex',
     alignItems: 'center',
-    // background: 'linear-gradient(135deg, #f9f9f9, #e0e0e0)',
     backgroundColor: '#ffffff',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-16)',
     padding: '12px 16px',
     marginTop: '8px',
     width: '250px',
     height: '100px',
-    boxShadow: 'var(--shadow-1)',
+    boxShadow: 'var(--shadow-light)',
     marginRight: '12px',
     flexShrink: 0,
+    cursor: 'pointer',
   };
 
   const iconStyle = {
@@ -56,9 +59,31 @@ const WorkspaceCard = ({ name, description }) => {
   );
 };
 
+const InputWithSVG = ({ searchTerm, setSearchTerm }) => {
+  return (
+    <div className="input-container">
+      <div className="svg-icon">
+        <svg className="icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#AAAAAA" class="bi bi-search" viewBox="0 0 16 16">
+          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
+        </svg>
+      </div>
+      <input
+        type="text"
+        className="search-input"
+        placeholder="Search Workspaces"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+    </div>
+  );
+};
+
 const Dashboard = () => {
   const owned = [
     { name: 'Alpha', description: 'Owned workspace' },
+    { name: 'Delta', description: 'This is another workspace' },
+    { name: 'Delta', description: 'This is another workspace' },
+    { name: 'Delta', description: 'This is another workspace' },
     { name: 'Delta', description: 'This is another workspace' },
   ];
   const member = [{ name: 'Beta' }];
@@ -69,7 +94,22 @@ const Dashboard = () => {
   const [showViewer, setShowViewer] = useState(true);
 
   const sectionStyle = {
+    marginTop: '32px',
     marginBottom: '30px',
+  };
+
+  const horizontalScrollStyle = {
+    display: 'flex',
+    overflowX: 'scroll',
+    paddingBottom: '10px',
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none',
+  };
+
+  const scrollContainerStyle = {
+    display: 'flex',
+    gap: '12px',
+    paddingBottom: '10px',
   };
 
   const searchStyle = {
@@ -111,50 +151,48 @@ const Dashboard = () => {
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      {/* Hero section */}
-      {/* Hero Section with Header and Search on the same line */}
+    <div style={{ fontFamily: 'var(--ff-poppins)' }}>
       <div style={{
-        background: 'linear-gradient(135deg, #f4c7e1, #b5a4d9)', // Lavender Pink gradient
-        margin: '8px',
-        padding: '24px 32px',
-        borderRadius: '8px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '24px',
       }}>
+        <H level={2} style={{ margin: 0 }}>Workspaces</H>
+        <InputWithSVG searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+      </div>
+
+      <div className='banner-dashboard' style={{
+        background: `url(${backgroundImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        padding: '24px 32px',
+        borderRadius: 'var(--radius-16)',
+      }}>
+
+        {/* Available Workspaces Box aligned under the header/search */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px',
+          flexDirection: 'column',
+          // alignItems: 'center',
+          gap: '24px',
+          // backgroundColor: '#f0f0f0',
+          borderRadius: '8px',
+          // padding: '15px',
         }}>
-          <H level={1} style={{ margin: 0 }}>Workspaces</H>
-          <input
-            type="text"
-            style={searchStyle}
-            placeholder="Search workspaces"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <div className='banner-content-dashboard' style={{ width: '65%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>Available Workspaces</h3> */}
+            <H level={4} style={{ margin: 0 }}>Boost Your Productivity! Create a Workspace and Start Managing Your Projects Seamlessly.</H>
+            {/* <p style={{ fontSize: '14px', color: '#888' }}>List of all available workspaces.</p> */}
+            <Button
+              iconLeft={<svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>} text="Create Workspace" color="primary" />
+          </div>
         </div>
-
-  {/* Available Workspaces Box aligned under the header/search */}
-  <div style={{
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: '8px',
-    padding: '15px',
-  }}>
-    <div style={{ width: '70%' }}>
-      <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>Available Workspaces</h3>
-      <p style={{ fontSize: '14px', color: '#888' }}>List of all available workspaces.</p>
-    </div>
-    <Button
-                                iconLeft={<svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                </svg>} text="Create Workspace" color="primary" />
-  </div>
-</div>
+      </div>
 
 
       {/* Owned Workspaces Section */}
@@ -168,10 +206,12 @@ const Dashboard = () => {
           </button>
         </div>
         {showOwned && (
-          <div style={{ display: 'flex', overflowX: 'scroll', marginTop: '10px' }}>
-            {owned.map((ws, idx) => (
-              <WorkspaceCard key={idx} {...ws} />
-            ))}
+          <div style={horizontalScrollStyle}>
+            <div style={scrollContainerStyle}>
+              {owned.map((ws, idx) => (
+                <WorkspaceCard key={idx} {...ws} />
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -179,7 +219,7 @@ const Dashboard = () => {
       {/* Member Workspaces Section */}
       <div style={sectionStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <H level={2} style={{ fontSize: '20px', fontWeight: '600', color: '#333' }}>
+          <H level={4} style={{ fontSize: '20px', fontWeight: '600', color: '#333' }}>
             Member Workspaces ({member.length}) {/* Member Workspaces Header */}
           </H>
           <button style={toggleButtonStyle} onClick={() => toggleVisibility('member')}>
@@ -187,10 +227,12 @@ const Dashboard = () => {
           </button>
         </div>
         {showMember && (
-          <div style={{ display: 'flex', overflowX: 'scroll', marginTop: '10px' }}>
-            {member.map((ws, idx) => (
-              <WorkspaceCard key={idx} {...ws} />
-            ))}
+          <div style={horizontalScrollStyle}>
+            <div style={scrollContainerStyle}>
+              {member.map((ws, idx) => (
+                <WorkspaceCard key={idx} {...ws} />
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -198,7 +240,7 @@ const Dashboard = () => {
       {/* Viewer Workspaces Section */}
       <div style={sectionStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <H level={2} style={{ fontSize: '20px', fontWeight: '600', color: '#333' }}>
+          <H level={4} style={{ fontSize: '20px', fontWeight: '600', color: '#333' }}>
             Viewer Workspaces ({viewer.length}) {/* Viewer Workspaces Header */}
           </H>
           <button style={toggleButtonStyle} onClick={() => toggleVisibility('viewer')}>
@@ -206,10 +248,12 @@ const Dashboard = () => {
           </button>
         </div>
         {showViewer && (
-          <div style={{ display: 'flex', overflowX: 'scroll', marginTop: '10px' }}>
-            {viewer.map((ws, idx) => (
-              <WorkspaceCard key={idx} {...ws} />
-            ))}
+          <div style={horizontalScrollStyle}>
+            <div style={scrollContainerStyle}>
+              {viewer.map((ws, idx) => (
+                <WorkspaceCard key={idx} {...ws} />
+              ))}
+            </div>
           </div>
         )}
       </div>

@@ -100,6 +100,24 @@
     font-weight: 500;
 }
 
+.user-control-icon svg {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+.user-control-icon {
+    position: relative;
+    display: inline-block;
+    padding: var(--padding-8);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition-300);
+    border: 1px solid var(--neutral-200);
+}
+
 .notification-circle {
     height: 16px;
     width: 16px;
@@ -133,7 +151,7 @@
     box-shadow: 0 0 0 2px white;
 }
 
-.notification-circle:hover {
+.notification-circle:hover, .user-control-icon:hover {
     background-color: var(--neutral-200);
     transition: var(--transition-300);
 }

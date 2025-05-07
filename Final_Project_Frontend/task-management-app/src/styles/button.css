@@ -39,6 +39,10 @@
     padding: var(--padding-10-24);
 }
 
+.banner-content-dashboard .button.primary {
+    width: fit-content;
+}
+
 button.header {
     font-size: var(--fs-14);
     padding: var(--padding-8-24);
