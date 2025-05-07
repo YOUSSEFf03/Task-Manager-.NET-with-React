@@ -18,7 +18,7 @@ namespace Final_Project_Backend.Data
             
             builder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 
-            return new AppDbContext(builder.Options);
+            return new AppDbContext(builder.Options, configuration);
         }
     }
 }
