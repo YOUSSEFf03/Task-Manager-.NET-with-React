@@ -46,7 +46,6 @@ namespace Final_Project_Backend.Services
 
         public async Task<TaskModel> CreateTask(int userId, int projectId, TaskCreateDto taskDto)
         {
-            // Check if user has permission (must be admin or member)
             var project = await _context.Projects
                 .Include(p => p.Workspace)
                 .ThenInclude(w => w.UserWorkspaces)

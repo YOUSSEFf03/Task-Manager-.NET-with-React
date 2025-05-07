@@ -66,54 +66,166 @@ public class WorkspaceController : ControllerBase
         return Ok(users);
     }
 
-
-
     [HttpDelete("{workspaceId}/users/{userIdToRemove}")]
-// [Authorize]
-public async Task<IActionResult> RemoveUserFromWorkspace(int workspaceId, int userIdToRemove)
-{
-    var nameIdentifierValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    if (string.IsNullOrEmpty(nameIdentifierValue))
+    public async Task<IActionResult> RemoveUserFromWorkspace(int workspaceId, int userIdToRemove)
     {
-        return Unauthorized("User not authenticated");
+        var nameIdentifierValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(nameIdentifierValue))
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var currentUserId = int.Parse(nameIdentifierValue);
+        var result = await _workspaceService.RemoveUserFromWorkspace(currentUserId, workspaceId, userIdToRemove);
+        return result ? NoContent() : BadRequest("Failed to remove user");
     }
-    var currentUserId = int.Parse(nameIdentifierValue);
-    var result = await _workspaceService.RemoveUserFromWorkspace(currentUserId, workspaceId, userIdToRemove);
-    return result ? NoContent() : BadRequest("Failed to remove user");
-}
 
-
-
-
-
-[HttpPut("{workspaceId}")]
-[Authorize]
-public async Task<IActionResult> UpdateWorkspace(int workspaceId, [FromBody] WorkspaceUpdateDto dto)
-{
-    var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    if (string.IsNullOrEmpty(userIdClaimValue))
+    [HttpPut("{workspaceId}")]
+    [Authorize]
+    public async Task<IActionResult> UpdateWorkspace(int workspaceId, [FromBody] WorkspaceUpdateDto dto)
     {
-        return Unauthorized("User not authenticated");
+        var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaimValue))
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaimValue);
+        var result = await _workspaceService.UpdateWorkspace(userId, workspaceId, dto);
+        return result != null ? Ok(result) : BadRequest("Update failed");
     }
-    var userId = int.Parse(userIdClaimValue);
-    var result = await _workspaceService.UpdateWorkspace(userId, workspaceId, dto);
-    return result != null ? Ok(result) : BadRequest("Update failed");
-}
 
-[HttpDelete("{workspaceId}")]
-[Authorize]
-public async Task<IActionResult> DeleteWorkspace(int workspaceId)
-{
-    var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    if (string.IsNullOrEmpty(userIdClaimValue))
+    [HttpDelete("{workspaceId}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteWorkspace(int workspaceId)
     {
-        return Unauthorized("User not authenticated");
+        var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaimValue))
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaimValue);
+        var result = await _workspaceService.DeleteWorkspace(userId, workspaceId);
+        return result ? NoContent() : BadRequest("Delete failed");
     }
-    var userId = int.Parse(userIdClaimValue);
-    var result = await _workspaceService.DeleteWorkspace(userId, workspaceId);
-    return result ? NoContent() : BadRequest("Delete failed");
-}
 
+    [HttpGet("count-by-role")]
+    public async Task<IActionResult> CountWorkspacesByRole()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaim.Value);
 
+        var roleCounts = await _workspaceService.CountWorkspacesByRole(userId);
+        return Ok(roleCounts);
+    }
 
+    [HttpPost("{workspaceId}/tags")]
+    public async Task<IActionResult> CreateTag(int workspaceId, [FromBody] CreateTagDto dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaim.Value);
+
+        var result = await _workspaceService.CreateTag(userId, workspaceId, dto);
+        return result != null ? Ok(result) : BadRequest("Failed to create tag");
+    }
+
+    [HttpPost("tasks/{taskId}/tags/{tagId}")]
+    public async Task<IActionResult> AssignTagToTask(int taskId, int tagId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaim.Value);
+
+        // Ensure the user has access to the workspace via _workspaceService.GetUserWorkspaces
+        var hasAccess = await _workspaceService.HasAccessToTaskWorkspace(userId, taskId);
+        if (!hasAccess)
+        {
+            return Forbid("User does not have access to the workspace");
+        }
+
+        var result = await _workspaceService.AssignTagToTask(userId, taskId, tagId);
+        return result ? NoContent() : BadRequest("Failed to assign tag to task");
+    }
+
+    [HttpPost("tasks/{taskId}/comments")]
+    public async Task<IActionResult> AddCommentToTask(int taskId, [FromBody] AddCommentDto dto)
+    {
+        if (dto == null || string.IsNullOrWhiteSpace(dto.Content))
+        {
+            return BadRequest(new { error = "The content field is required." });
+        }
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaim.Value);
+
+        var comment = await _workspaceService.AddCommentToTask(userId, taskId, dto.Content);
+        return comment != null ? Ok(comment) : BadRequest("Failed to add comment");
+    }
+
+    [HttpPost("comments/{commentId}/mentions")]
+    public async Task<IActionResult> MentionUserInComment(int commentId, [FromBody] MentionUserDto dto)
+    {
+        if (dto == null || dto.MentionedUserId <= 0)
+        {
+            return BadRequest(new { error = "Invalid mentionedUserId." });
+        }
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+
+        var result = await _workspaceService.MentionUserInComment(commentId, dto.MentionedUserId);
+        return result ? NoContent() : BadRequest("Failed to mention user");
+    }
+
+    [HttpGet("projects/{projectId}/comments")]
+    
+
+    [HttpGet("tasks/{taskId}/comments")]
+    public async Task<IActionResult> GetCommentsByTask(int taskId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaim.Value);
+
+        // Ensure the user has access to the task
+        var comments = await _workspaceService.GetCommentsByTask(taskId);
+        return Ok(comments);
+    }
+
+    [HttpGet("search-users")]
+    public async Task<IActionResult> SearchUsers([FromQuery] string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return BadRequest(new { error = "Query parameter is required." });
+        }
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+
+        var users = await _workspaceService.SearchUsers(query);
+        return Ok(users);
+    }
 }
