@@ -12,7 +12,7 @@ namespace Final_Project_Backend.Services
         Task<IEnumerable<WorkspaceResponseDto>> GetWorkspaceDtosByUser(int userId);
         Task<WorkspaceResponseDto> CreateWorkspace(int userId, WorkspaceCreateDto workspaceDto);
         Task<bool> AddUserToWorkspace(int requestingUserId, int workspaceId, AddUserToWorkspaceDto dto);
-        Task<IEnumerable<User>> GetUserWorkspaces(int workspaceId);
+        Task<IEnumerable<UserWithRoleDto>> GetUserWorkspaces(int workspaceId);
         Task<bool> RemoveUserFromWorkspace(int requestingUserId, int workspaceId, int userIdToRemove);
         Task<Workspace?> UpdateWorkspace(int userId, int workspaceId, WorkspaceUpdateDto dto);
         Task<bool> DeleteWorkspace(int userId, int workspaceId);
@@ -20,7 +20,7 @@ namespace Final_Project_Backend.Services
         Task<Tag?> CreateTag(int userId, int workspaceId, CreateTagDto dto);
         Task<bool> AssignTagToTask(int userId, int taskId, int tagId);
         Task<bool> HasAccessToTaskWorkspace(int userId, int taskId);
-        Task<IEnumerable<User>> SearchUsers(string query);
+        Task<IEnumerable<UserSearchDto>> SearchUsers(string query);
         Task<bool> IsWorkspaceAdmin(int userId, int workspaceId);
       
     }

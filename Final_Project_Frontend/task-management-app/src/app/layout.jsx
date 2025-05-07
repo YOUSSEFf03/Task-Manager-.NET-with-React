@@ -23,13 +23,119 @@ const InputWithSVG = ({ searchTerm, setSearchTerm }) => (
 );
 
 const UserModal = ({ show, onClose }) => {
-    if (!show) return null;
+    const [users, setUsers] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [role, setRole] = useState('Admin');
 
-    const users = [
-        { name: 'Demo User', role: 'Admin' },
-        { name: 'Alex Smith', role: 'Member' },
-        { name: 'Jane Doe', role: 'Viewer' },
-    ];
+    useEffect(() => {
+        if (show) {
+            const fetchUsers = async () => {
+                try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch('http://localhost:5137/api/workspaces/3/users', {
+                        method: 'GET',
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                    if (!response.ok) {
+                        console.error(`Error fetching users: ${response.status} ${response.statusText}`);
+                        return;
+                    }
+                    const data = await response.json().catch(() => {
+                        console.error('Error parsing JSON response');
+                        return [];
+                    });
+                    setUsers(data);
+                } catch (error) {
+                    console.error('Error fetching users:', error);
+                }
+            };
+
+            fetchUsers();
+        }
+    }, [show]);
+
+    const handleRemoveUser = async (userId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:5137/api/workspaces/3/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (!response.ok) {
+                console.error(`Error removing user: ${response.status} ${response.statusText}`);
+                return;
+            }
+            alert('User removed successfully!');
+            setUsers((prevUsers) => prevUsers.filter((user) => user.userId !== userId));
+        } catch (error) {
+            console.error('Error removing user:', error);
+        }
+    };
+
+    const handleSearch = async () => {
+        if (!searchTerm.trim()) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:5137/api/workspaces/search-users?query=${searchTerm}`, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (!response.ok) {
+                console.error(`Error searching users: ${response.status} ${response.statusText}`);
+                return;
+            }
+            const data = await response.json();
+            setSearchResults(data.slice(0, 4)); // Limit to 4 results
+        } catch (error) {
+            console.error('Error searching users:', error);
+        }
+    };
+
+    const handleAddUser = async () => {
+        if (!selectedUser) {
+            alert('Please select a user to add.');
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:5137/api/workspaces/3/users', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: selectedUser.email,
+                    role,
+                }),
+            });
+            if (!response.ok) {
+                console.error(`Error adding user: ${response.status} ${response.statusText}`);
+                return;
+            }
+            alert('User added successfully!');
+            setSelectedUser(null);
+            setSearchTerm('');
+            setSearchResults([]);
+        } catch (error) {
+            console.error('Error adding user:', error);
+        }
+    };
+
+    if (!show) return null;
 
     return (
         <div style={{
@@ -67,8 +173,51 @@ const UserModal = ({ show, onClose }) => {
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-                    <InputWithSVG searchTerm={''} setSearchTerm={() => { }} />
-                    <Button text="Add User" color="primary" />
+                    <InputWithSVG searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+                    <Button onClick={handleSearch} text="Search" color="primary" />
+                </div>
+
+                {searchResults.length > 0 && (
+                    <div style={{ marginBottom: '16px' }}>
+                        <H level={4} style={{ marginBottom: '8px' }}>Search Results</H>
+                        {searchResults.map((user) => (
+                            <div
+                                key={user.id}
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    padding: '8px',
+                                    border: '1px solid #ccc',
+                                    borderRadius: '8px',
+                                    marginBottom: '8px',
+                                    cursor: 'pointer',
+                                    backgroundColor: selectedUser?.id === user.id ? '#f0f8ff' : '#fff',
+                                }}
+                                onClick={() => setSelectedUser(user)}
+                            >
+                                <span>{user.fullName} ({user.email})</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                    <select
+                        value={role}
+                        onChange={(e) => setRole(e.target.value)}
+                        style={{
+                            padding: '8px',
+                            borderRadius: '8px',
+                            border: '1px solid #ccc',
+                            flex: 1,
+                        }}
+                    >
+                        <option value="Admin">Admin</option>
+                        <option value="Member">Member</option>
+                        <option value="Viewer">Viewer</option>
+                    </select>
+                    <Button onClick={handleAddUser} text="Add User" color="primary" />
                 </div>
 
                 <H level={4} style={{ marginBottom: '12px' }}>Who has access</H>
@@ -86,14 +235,18 @@ const UserModal = ({ show, onClose }) => {
                                 fontWeight: 'bold',
                                 color: '#555'
                             }}>
-                                {user.name.charAt(0)}
+                                {(user?.fullName?.charAt(0) || 'U').toUpperCase()}
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                                <div style={{ fontWeight: '500' }}>{user.name}</div>
-                                <div style={{ fontSize: '12px', color: '#888' }}>{user.role}</div>
+                                <div style={{ fontWeight: '500' }}>{user?.fullName || 'Unknown User'}</div>
+                                <div style={{ fontSize: '12px', color: '#888' }}>{user?.role || 'Unknown Role'}</div>
                             </div>
-
-
+                            <Button
+                                onClick={() => handleRemoveUser(user.userId)}
+                                text="Remove"
+                                color="danger"
+                                style={{ marginLeft: 'auto' }}
+                            />
                         </div>
                     ))}
                 </div>

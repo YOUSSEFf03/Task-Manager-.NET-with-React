@@ -74,13 +74,13 @@ public async Task<IActionResult> AddUserToWorkspace(int workspaceId, [FromBody] 
     }
 }
 
-   [HttpGet("{workspaceId}/users")]
+[HttpGet("{workspaceId}/users")]
 public async Task<IActionResult> GetUserWorkspaces(int workspaceId)
 {
     try
     {
-        var users = await _workspaceService.GetUserWorkspaces(workspaceId);
-        return Ok(users);
+        var usersWithRoles = await _workspaceService.GetUserWorkspaces(workspaceId);
+        return Ok(usersWithRoles);
     }
     catch (Exception ex)
     {
