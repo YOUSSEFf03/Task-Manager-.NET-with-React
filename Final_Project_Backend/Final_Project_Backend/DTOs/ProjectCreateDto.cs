@@ -1,6 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-
+using Final_Project_Backend.Models;
 
 namespace Final_Project_Backend.DTOs
 
@@ -14,7 +14,7 @@ namespace Final_Project_Backend.DTOs
         [MaxLength(500)]
         public string? Description { get; set; } = string.Empty;
 
-        public string Status { get; set; } = "Unstarted";
+        public ProjectStatus Status { get; set; } = ProjectStatus.Unstarted;
         public DateTime StartDate { get; set; }  // Added
         public DateTime Deadline { get; set; }   // Added
     }

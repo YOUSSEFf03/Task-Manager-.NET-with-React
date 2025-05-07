@@ -38,13 +38,13 @@ public class ProjectTaskController : ControllerBase
         {
             return Unauthorized("User not authenticated");
         }
-     var userId = int.Parse(userIdClaim.Value);
-        
-    if (!await _projectTaskService.HasProjectPermission(userId, projectId))
-    {
-        return Forbid();
-    }
-       
+        var userId = int.Parse(userIdClaim.Value);
+
+        if (!await _projectTaskService.HasProjectPermission(userId, projectId))
+        {
+            return Forbid();
+        }
+
 
         var result = await _projectTaskService.CreateTask(userId, projectId, taskDto);
         return Ok(result);
@@ -65,133 +65,147 @@ public class ProjectTaskController : ControllerBase
     }
 
 
-    [HttpGet("{workspaceId}/projects")]
-public async Task<IActionResult> GetProjects(int workspaceId)
-{   
-    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    if (userIdClaim == null)
+    // [HttpGet("{workspaceId}/projects")]
+    // public async Task<IActionResult> GetProjects(int workspaceId)
+    // {
+    //     var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    //     if (userIdClaim == null)
+    //     {
+    //         return Unauthorized("User not authenticated");
+    //     }
+    //     var userId = int.Parse(userIdClaim);
+    //     var result = await _projectTaskService.GetProjects(workspaceId, userId);
+    //     return Ok(result);
+    // }
+
+    [HttpGet("workspaces/{workspaceId}")]
+    public async Task<IActionResult> GetProjects(int workspaceId)
     {
-        return Unauthorized("User not authenticated");
-    }
-    var userId = int.Parse(userIdClaim);
-    var result = await _projectTaskService.GetProjects(workspaceId , userId);
-    return Ok(result);
-}
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
 
-[HttpGet("{projectId}/tasks")]
-public async Task<IActionResult> GetTasks(int projectId)
-{
-    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    if (userIdClaim == null)
-    {
-        return Unauthorized("User not authenticated");
-    }
-    var userId = int.Parse(userIdClaim);
-    var result = await _projectTaskService.GetTasks(projectId, userId);
-    return Ok(result);
-}
-
-[HttpGet("tasks/{parentTaskId}/subtasks")]
-public async Task<IActionResult> GetSubtasks(int parentTaskId)
-{
-
-     var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    if (userIdClaim == null)
-    {
-        return Unauthorized("User not authenticated");
-    }
-    var userId = int.Parse(userIdClaim);
-    var result = await _projectTaskService.GetSubtasks(parentTaskId , userId);
-    return Ok(result);
-}
-
-
-[HttpPut("{projectId}")] 
-[Authorize]
-public async Task<IActionResult> UpdateProject(int projectId, [FromBody] ProjectUpdateDto dto)
-{
-    var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    if (string.IsNullOrEmpty(userIdClaimValue))
-    {
-        return Unauthorized("User not authenticated");
-    }
-    var userId = int.Parse(userIdClaimValue);
-    var result = await _projectTaskService.UpdateProject(userId, projectId, dto);
-    return result != null ? Ok(result) : BadRequest("Update failed");
-}
-
-[HttpDelete("{projectId}")] 
-[Authorize]
-public async Task<IActionResult> DeleteProject(int projectId)
-{
-    var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    if (string.IsNullOrEmpty(userIdClaimValue))
-    {
-        return Unauthorized("User not authenticated");
-    }
-    var userId = int.Parse(userIdClaimValue);
-    var result = await _projectTaskService.DeleteProject(userId, projectId);
-    return result ? NoContent() : BadRequest("Delete failed");
-}
-
-[HttpPut("tasks/{taskId}")]
-[Authorize]
-public async Task<IActionResult> UpdateTask(int taskId, [FromBody] TaskUpdateDto dto)
-{
-    var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    if (string.IsNullOrEmpty(userIdClaimValue))
-    {
-        return Unauthorized("User not authenticated");
-    }
-    var userId = int.Parse(userIdClaimValue);
-    var result = await _projectTaskService.UpdateTask(userId, taskId, dto);
-    return result != null ? Ok(result) : BadRequest("Update failed");
-}
-
-[HttpDelete("tasks/{taskId}")]
-[Authorize]
-public async Task<IActionResult> DeleteTask(int taskId)
-{
-    var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    if (string.IsNullOrEmpty(userIdClaimValue))
-    {
-        return Unauthorized("User not authenticated");
-    }
-    var userId = int.Parse(userIdClaimValue);
-    var result = await _projectTaskService.DeleteTask(userId, taskId);
-    return result ? NoContent() : BadRequest("Delete failed");
-}
-
-
-[HttpPost("tasks/{taskId}/comments")]
-public async Task<IActionResult> AddCommentToTask(int taskId, [FromBody] AddCommentDto dto)
-{
-    if (string.IsNullOrWhiteSpace(dto?.Content))
-    {
-        return BadRequest("Content is required");
+        var userId = int.Parse(userIdClaim);
+        var result = await _projectTaskService.GetProjects(workspaceId, userId);
+        return Ok(result);
     }
 
-    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-    if (userIdClaim == null) return Unauthorized();
-    
-    var userId = int.Parse(userIdClaim.Value);
-    var comment = await _projectTaskService.AddCommentToTask(userId, taskId, dto.Content);
-    return comment != null ? Ok(comment) : BadRequest("Failed to add comment");
-}
+    [HttpGet("{projectId}/tasks")]
+    public async Task<IActionResult> GetTasks(int projectId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaim);
+        var result = await _projectTaskService.GetTasks(projectId, userId);
+        return Ok(result);
+    }
 
-[HttpPost("comments/{commentId}/mentions/{mentionedUserId}")]
-public async Task<IActionResult> MentionUserInComment(int commentId, int mentionedUserId)
-{
-    var result = await _projectTaskService.MentionUserInComment(commentId, mentionedUserId);
-    return result ? NoContent() : BadRequest("Failed to mention user");
-}
+    [HttpGet("tasks/{parentTaskId}/subtasks")]
+    public async Task<IActionResult> GetSubtasks(int parentTaskId)
+    {
 
-[HttpGet("tasks/{taskId}/comments")]
-public async Task<IActionResult> GetCommentsByTask(int taskId)
-{
-    var comments = await _projectTaskService.GetCommentsByTask(taskId);
-    return Ok(comments);
-}
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaim);
+        var result = await _projectTaskService.GetSubtasks(parentTaskId, userId);
+        return Ok(result);
+    }
+
+
+    [HttpPut("{projectId}")]
+    [Authorize]
+    public async Task<IActionResult> UpdateProject(int projectId, [FromBody] ProjectUpdateDto dto)
+    {
+        var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaimValue))
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaimValue);
+        var result = await _projectTaskService.UpdateProject(userId, projectId, dto);
+        return result != null ? Ok(result) : BadRequest("Update failed");
+    }
+
+    [HttpDelete("{projectId}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteProject(int projectId)
+    {
+        var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaimValue))
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaimValue);
+        var result = await _projectTaskService.DeleteProject(userId, projectId);
+        return result ? NoContent() : BadRequest("Delete failed");
+    }
+
+    [HttpPut("tasks/{taskId}")]
+    [Authorize]
+    public async Task<IActionResult> UpdateTask(int taskId, [FromBody] TaskUpdateDto dto)
+    {
+        var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaimValue))
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaimValue);
+        var result = await _projectTaskService.UpdateTask(userId, taskId, dto);
+        return result != null ? Ok(result) : BadRequest("Update failed");
+    }
+
+    [HttpDelete("tasks/{taskId}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteTask(int taskId)
+    {
+        var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaimValue))
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaimValue);
+        var result = await _projectTaskService.DeleteTask(userId, taskId);
+        return result ? NoContent() : BadRequest("Delete failed");
+    }
+
+
+    [HttpPost("tasks/{taskId}/comments")]
+    public async Task<IActionResult> AddCommentToTask(int taskId, [FromBody] AddCommentDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto?.Content))
+        {
+            return BadRequest("Content is required");
+        }
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null) return Unauthorized();
+
+        var userId = int.Parse(userIdClaim.Value);
+        var comment = await _projectTaskService.AddCommentToTask(userId, taskId, dto.Content);
+        return comment != null ? Ok(comment) : BadRequest("Failed to add comment");
+    }
+
+    [HttpPost("comments/{commentId}/mentions/{mentionedUserId}")]
+    public async Task<IActionResult> MentionUserInComment(int commentId, int mentionedUserId)
+    {
+        var result = await _projectTaskService.MentionUserInComment(commentId, mentionedUserId);
+        return result ? NoContent() : BadRequest("Failed to mention user");
+    }
+
+    [HttpGet("tasks/{taskId}/comments")]
+    public async Task<IActionResult> GetCommentsByTask(int taskId)
+    {
+        var comments = await _projectTaskService.GetCommentsByTask(taskId);
+        return Ok(comments);
+    }
 
 
 

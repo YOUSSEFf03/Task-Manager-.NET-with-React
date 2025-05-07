@@ -17,7 +17,6 @@ namespace Final_Project_Backend.Models
         public DateTime? Deadline { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public int CreatedByUserId { get; set; }
-        
         public Workspace Workspace { get; set; } = null!;
         public ICollection<Task> Tasks { get; set; } = new List<Task>();
     }

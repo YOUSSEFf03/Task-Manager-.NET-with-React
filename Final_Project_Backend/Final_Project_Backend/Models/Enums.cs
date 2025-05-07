@@ -3,13 +3,22 @@
 
 namespace Final_Project_Backend.Models
 {
+    // public enum ProjectStatus
+    // {
+    //     Unstarted,
+    //     Active,
+    //     Completed,
+    //     Archived,
+    //     Removed
+    // }
+
     public enum ProjectStatus
     {
-        Unstarted,
-        Active,
-        Completed,
-        Archived,
-        Removed
+        Unstarted = 0,
+        Active = 1,
+        Completed = 2,
+        Archived = 3,
+        Removed = 4
     }
 
     public enum TaskPriority
@@ -28,5 +37,5 @@ namespace Final_Project_Backend.Models
         Removed
     }
 
- 
+
 }
