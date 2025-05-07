@@ -38,7 +38,13 @@ public class ProjectTaskController : ControllerBase
         {
             return Unauthorized("User not authenticated");
         }
-        var userId = int.Parse(userIdClaim.Value);
+     var userId = int.Parse(userIdClaim.Value);
+        
+    if (!await _projectTaskService.HasProjectPermission(userId, projectId))
+    {
+        return Forbid();
+    }
+       
 
         var result = await _projectTaskService.CreateTask(userId, projectId, taskDto);
         return Ok(result);

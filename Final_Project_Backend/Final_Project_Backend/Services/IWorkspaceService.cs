@@ -29,5 +29,7 @@ namespace Final_Project_Backend.Services
         Task<IEnumerable<Comment>> GetCommentsByTask(int taskId);
 
         Task<IEnumerable<User>> SearchUsers(string query);
+        Task<bool> IsWorkspaceAdmin(int userId, int workspaceId);
+      
     }
 }

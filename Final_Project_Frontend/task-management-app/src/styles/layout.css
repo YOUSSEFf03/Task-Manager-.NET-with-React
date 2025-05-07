@@ -190,3 +190,31 @@
     padding: 24px;
     overflow-y: auto;
 }
+/* Dashboard Styles */
+.task-columns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Creates 3 equal columns */
+    gap: 0; /* No gap between columns */
+    border: 2px solid #ccc; /* Border around the whole table */
+    border-radius: 8px; /* Optional: rounded corners */
+  }
+  
+  .task-column {
+    border-right: 1px solid #ccc; /* Border between columns */
+    padding: 0 12px;
+  }
+  
+  .task-column:last-child {
+    border-right: none; /* No border on the last column */
+  }
+  
+  .task-column h4 {
+    margin-bottom: 12px;
+    font-size: 16px;
+    color: #333;
+  }
+  
+  .task-column .task-card {
+    border-left: 6px solid #ccc; /* Optional: border for individual task cards */
+  }
+  

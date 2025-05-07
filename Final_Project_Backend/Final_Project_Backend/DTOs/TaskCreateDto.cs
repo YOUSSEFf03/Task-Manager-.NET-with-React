@@ -7,7 +7,7 @@ namespace Final_Project_Backend.DTOs
     [Required, MaxLength(200)]
     public string Title { get; set; } = string.Empty;
 
-    public string? Description { get; set; } // Nullable type is fine here
+    public string? Description { get; set; }
 
     public int? AssignedToUserId { get; set; }
 

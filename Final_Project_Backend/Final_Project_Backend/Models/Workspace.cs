@@ -18,7 +18,6 @@ namespace Final_Project_Backend.Models
         // User who created the workspace
         public int CreatedByUserId { get; set; }  // Foreign Key
         
-        // Navigation property to the User who created this workspace
         public User CreatedByUser { get; set; } = null!;
         
         // Relationships for many-to-many and one-to-many associations

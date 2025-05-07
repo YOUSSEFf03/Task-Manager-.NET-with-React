@@ -329,6 +329,9 @@ namespace Final_Project_Backend.Services
             return true;
         }
 
+
+        
+
         public async Task<IEnumerable<Comment>> GetCommentsByTask(int taskId)
         {
             return await _context.Comments
@@ -343,5 +346,18 @@ namespace Final_Project_Backend.Services
                 .Where(u => u.FullName.Contains(query) || u.Email.Contains(query))
                 .ToListAsync();
         }
+
+
+public async Task<bool> IsWorkspaceAdmin(int userId, int workspaceId)
+{
+    var userWorkspace = await _context.UserWorkspaces
+        .FirstOrDefaultAsync(uw => uw.UserId == userId && uw.WorkspaceId == workspaceId);
+        
+    return userWorkspace?.Role == WorkspaceRole.Admin;
+}
+
+
+
+
     }
 }

@@ -27,10 +27,5 @@ namespace Final_Project_Backend.Models
         Removed
     }
 
-    public enum WorkspaceRole
-    {
-        Admin,
-        Member,
-        Viewer
-    }
+ 
 }
