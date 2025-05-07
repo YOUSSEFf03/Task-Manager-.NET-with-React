@@ -10,9 +10,9 @@ public class WorkspaceResponseDto
     public string? Name { get; set; }
     public string? Description { get; set; }
     public int CreatedByUserId { get; set; }
-    public string Role { get; set; }
+    public string? Role { get; set; } // Make the property nullable
 
-    public WorkspaceResponseDto(int workspaceId, string name, string description, int createdByUserId, string role)
+    public WorkspaceResponseDto(int workspaceId, string name, string description, int createdByUserId, string? role)
     {
         WorkspaceId = workspaceId;
         Name = name;

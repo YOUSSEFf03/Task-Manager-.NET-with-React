@@ -48,19 +48,26 @@ public class WorkspaceController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("{workspaceId}/users")]
-    public async Task<IActionResult> AddUserToWorkspace(int workspaceId, [FromBody] AddUserToWorkspaceDto dto)
+  [HttpPost("{workspaceId}/users")]
+public async Task<IActionResult> AddUserToWorkspace(int workspaceId, [FromBody] AddUserToWorkspaceDto dto)
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+    if (userIdClaim == null)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
-        {
-            return Unauthorized("User not authenticated");
-        }
-        var userId = int.Parse(userIdClaim.Value);
-
-        var result = await _workspaceService.AddUserToWorkspace(userId, workspaceId, dto);
-        return Ok(result);
+        return Unauthorized(new { error = "User not authenticated" });
     }
+    var userId = int.Parse(userIdClaim.Value);
+
+    try
+    {
+        var result = await _workspaceService.AddUserToWorkspace(userId, workspaceId, dto);
+        return result ? Ok(new { success = true }) : StatusCode(StatusCodes.Status403Forbidden, new { error = "Failed to add user" });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, new { error = ex.Message });
+    }
+}
 
     [HttpGet("{workspaceId}/users")]
     public async Task<IActionResult> GetUserWorkspaces(int workspaceId)
@@ -124,17 +131,30 @@ public class WorkspaceController : ControllerBase
         return Ok(roleCounts);
     }
 
-   [HttpPost("{workspaceId}/tags")]
+ 
+[HttpPost("{workspaceId}/tags")]
 public async Task<IActionResult> CreateTag(int workspaceId, [FromBody] CreateTagDto dto)
 {
     var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
     if (string.IsNullOrEmpty(userIdClaimValue))
     {
-        return Unauthorized("User not authenticated");
+        return Unauthorized(new { error = "User not authenticated" });
     }
     var userId = int.Parse(userIdClaimValue);
-    var tag = await _workspaceService.CreateTag(userId, workspaceId, dto);
-    return tag != null ? Ok(tag) : Forbid(); 
+
+    try
+    {
+        var tag = await _workspaceService.CreateTag(userId, workspaceId, dto);
+        return tag != null ? Ok(tag) : StatusCode(StatusCodes.Status403Forbidden, new { error = "Tag creation failed" });
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+    }
+    catch (Exception)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Failed to create tag" });
+    }
 }
 
 [HttpPost("tasks/{taskId}/tags/{tagId}")]

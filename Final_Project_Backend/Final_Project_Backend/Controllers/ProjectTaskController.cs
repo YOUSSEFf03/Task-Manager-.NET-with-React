@@ -16,111 +16,178 @@ public class ProjectTaskController : ControllerBase
         _projectTaskService = projectTaskService;
     }
 
-    [HttpPost("workspaces/{workspaceId}")]
-    public async Task<IActionResult> CreateProject(int workspaceId, [FromBody] ProjectCreateDto projectDto)
+  [HttpPost("workspaces/{workspaceId}")]
+public async Task<IActionResult> CreateProject(int workspaceId, [FromBody] ProjectCreateDto projectDto)
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+    if (userIdClaim == null)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
-        {
-            return Unauthorized("User not authenticated");
-        }
-        var userId = int.Parse(userIdClaim.Value);
+        return Unauthorized(new { error = "User not authenticated" });
+    }
+    var userId = int.Parse(userIdClaim.Value);
 
+    try
+    {
         var result = await _projectTaskService.CreateProject(userId, workspaceId, projectDto);
         return Ok(result);
     }
-
-    [HttpPost("{projectId}/tasks")]
-    public async Task<IActionResult> CreateTask(int projectId, [FromBody] TaskCreateDto taskDto)
+    catch (UnauthorizedAccessException ex)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
-        {
-            return Unauthorized("User not authenticated");
-        }
-        var userId = int.Parse(userIdClaim.Value);
+        return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+    }
+    catch (Exception)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Failed to create project" });
+    }
+}
 
+   [HttpPost("{projectId}/tasks")]
+public async Task<IActionResult> CreateTask(int projectId, [FromBody] TaskCreateDto taskDto)
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+    if (userIdClaim == null)
+    {
+        return Unauthorized(new { error = "User not authenticated" });
+    }
+    var userId = int.Parse(userIdClaim.Value);
+
+    try
+    {
         if (!await _projectTaskService.HasProjectPermission(userId, projectId))
         {
-            return Forbid();
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "User doesn't have permission" });
         }
-
 
         var result = await _projectTaskService.CreateTask(userId, projectId, taskDto);
         return Ok(result);
     }
-
-    [HttpPost("tasks/{taskId}/subtasks")]
-    public async Task<IActionResult> CreateSubtask(int taskId, [FromBody] SubtaskCreateDto subtaskDto)
+    catch (KeyNotFoundException ex)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
-        {
-            return Unauthorized("User not authenticated");
-        }
-        var userId = int.Parse(userIdClaim.Value);
+        return NotFound(new { error = ex.Message });
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+    }
+    catch (Exception)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Failed to create task" });
+    }
+}
 
+[HttpPost("tasks/{taskId}/subtasks")]
+public async Task<IActionResult> CreateSubtask(int taskId, [FromBody] SubtaskCreateDto subtaskDto)
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+    if (userIdClaim == null)
+    {
+        return Unauthorized(new { error = "User not authenticated" });
+    }
+    var userId = int.Parse(userIdClaim.Value);
+
+    try
+    {
         var result = await _projectTaskService.CreateSubtask(userId, taskId, subtaskDto);
         return Ok(result);
     }
-
-
-    // [HttpGet("{workspaceId}/projects")]
-    // public async Task<IActionResult> GetProjects(int workspaceId)
-    // {
-    //     var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    //     if (userIdClaim == null)
-    //     {
-    //         return Unauthorized("User not authenticated");
-    //     }
-    //     var userId = int.Parse(userIdClaim);
-    //     var result = await _projectTaskService.GetProjects(workspaceId, userId);
-    //     return Ok(result);
-    // }
-
-    [HttpGet("workspaces/{workspaceId}")]
-    public async Task<IActionResult> GetProjects(int workspaceId)
+    catch (KeyNotFoundException ex)
     {
+        return NotFound(new { error = ex.Message });
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+    }
+    catch (Exception)
+    {
+        // Log the exception here if you have logging configured
+        return StatusCode(StatusCodes.Status500InternalServerError, new { error = "An unexpected error occurred" });
+    }
+}
+    [HttpGet("{workspaceId}/projects")]
+    public async Task<IActionResult> GetProjects(int workspaceId)
+    {   
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userIdClaim == null)
         {
             return Unauthorized("User not authenticated");
         }
-
         var userId = int.Parse(userIdClaim);
-        var result = await _projectTaskService.GetProjects(workspaceId, userId);
+        var result = await _projectTaskService.GetProjects(workspaceId , userId);
         return Ok(result);
     }
 
-    [HttpGet("{projectId}/tasks")]
-    public async Task<IActionResult> GetTasks(int projectId)
+   [HttpGet("{projectId}/tasks")]
+public async Task<IActionResult> GetTasks(int projectId)
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (userIdClaim == null)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null)
-        {
-            return Unauthorized("User not authenticated");
-        }
-        var userId = int.Parse(userIdClaim);
+        return Unauthorized(new { error = "User not authenticated" });
+    }
+    var userId = int.Parse(userIdClaim);
+
+    try
+    {
         var result = await _projectTaskService.GetTasks(projectId, userId);
         return Ok(result);
     }
-
-    [HttpGet("tasks/{parentTaskId}/subtasks")]
-    public async Task<IActionResult> GetSubtasks(int parentTaskId)
+    catch (UnauthorizedAccessException ex)
     {
+        return StatusCode(StatusCodes.Status403Forbidden, new { 
+            error = "Access denied",
+            details = ex.Message 
+        });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, new { 
+            error = "Failed to retrieve tasks",
+            details = ex.Message 
+        });
+    }
+}
 
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null)
-        {
-            return Unauthorized("User not authenticated");
-        }
-        var userId = int.Parse(userIdClaim);
+[HttpGet("tasks/{parentTaskId}/subtasks")]
+public async Task<IActionResult> GetSubtasks(int parentTaskId)
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (userIdClaim == null)
+    {
+        return Unauthorized(new { error = "User not authenticated" });
+    }
+    var userId = int.Parse(userIdClaim);
+
+    try
+    {
         var result = await _projectTaskService.GetSubtasks(parentTaskId, userId);
         return Ok(result);
     }
+    catch (KeyNotFoundException ex)
+    {
+        return NotFound(new { 
+            error = "Task not found",
+            details = ex.Message,
+            taskId = parentTaskId
+        });
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        return StatusCode(StatusCodes.Status403Forbidden, new { 
+            error = "Access denied",
+            details = ex.Message
+        });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(StatusCodes.Status500InternalServerError, new { 
+            error = "Failed to retrieve subtasks",
+            details = ex.Message
+        });
+    }
+}
 
-
-    [HttpPut("{projectId}")]
+    [HttpPut("{projectId}")] 
     [Authorize]
     public async Task<IActionResult> UpdateProject(int projectId, [FromBody] ProjectUpdateDto dto)
     {
@@ -134,7 +201,7 @@ public class ProjectTaskController : ControllerBase
         return result != null ? Ok(result) : BadRequest("Update failed");
     }
 
-    [HttpDelete("{projectId}")]
+    [HttpDelete("{projectId}")] 
     [Authorize]
     public async Task<IActionResult> DeleteProject(int projectId)
     {
@@ -176,7 +243,6 @@ public class ProjectTaskController : ControllerBase
         return result ? NoContent() : BadRequest("Delete failed");
     }
 
-
     [HttpPost("tasks/{taskId}/comments")]
     public async Task<IActionResult> AddCommentToTask(int taskId, [FromBody] AddCommentDto dto)
     {
@@ -187,7 +253,7 @@ public class ProjectTaskController : ControllerBase
 
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim == null) return Unauthorized();
-
+        
         var userId = int.Parse(userIdClaim.Value);
         var comment = await _projectTaskService.AddCommentToTask(userId, taskId, dto.Content);
         return comment != null ? Ok(comment) : BadRequest("Failed to add comment");
@@ -206,10 +272,6 @@ public class ProjectTaskController : ControllerBase
         var comments = await _projectTaskService.GetCommentsByTask(taskId);
         return Ok(comments);
     }
-
-
-
-
 }
 
 
