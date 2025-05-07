@@ -1,11 +1,114 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import H from '../components/H';
 import Button from '../components/Button';
 import '../styles/inputSearch.css';
 import backgroundImage from "../assets/Group 285.png";
 import '../styles/dashboard.css';
+import axios from 'axios';
 
-const WorkspaceCard = ({ name, description }) => {
+const Modal = ({ isOpen, onClose, onCreate }) => {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+
+  const modalOverlayStyle = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  };
+
+  const modalContentStyle = {
+    backgroundColor: '#fff',
+    padding: '20px',
+    borderRadius: '12px',
+    width: '400px',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+    position: 'relative',
+  };
+
+  const closeButtonStyle = {
+    position: 'absolute',
+    top: '20px',
+    right: '10px',
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '18px',
+    fontWeight: 'bold',
+  };
+
+  const inputStyle = {
+    width: '95%',
+    minWidth: '95%',
+    maxWidth: '95%',
+    padding: '8px',
+    margin: '8px 0',
+    borderRadius: '8px',
+    border: '1px solid #ccc',
+  };
+
+  const buttonStyle = {
+    backgroundColor: '#007bff',
+    color: '#fff',
+    border: 'none',
+    padding: '10px 20px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    marginTop: '12px',
+    width: '100%',
+  };
+
+  const handleCreate = () => {
+    if (name.trim()) {
+      onCreate({ name, description });
+      setName('');
+      setDescription('');
+      onClose();
+    } else {
+      alert('Name is required');
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div style={modalOverlayStyle}>
+      <div className='modal-workspace-create' style={modalContentStyle}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <button style={closeButtonStyle} onClick={onClose}>
+            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6" />
+            </svg>
+          </button>
+          <H level={4} style={{ margin: 0 }}>Create Workspace</H>
+        </div>
+        <input
+          style={inputStyle}
+          type="text"
+          placeholder="Workspace Name (required)"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <textarea
+          style={inputStyle}
+          placeholder="Description (optional)"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        {/* <button style={buttonStyle} onClick={handleCreate}>Create</button> */}
+        <Button onClick={handleCreate} text="Create Workspace" color="primary" />
+      </div>
+    </div>
+  );
+};
+
+const WorkspaceCard = ({ name, description, role }) => {
   const cardStyle = {
     display: 'flex',
     alignItems: 'center',
@@ -79,19 +182,78 @@ const InputWithSVG = ({ searchTerm, setSearchTerm }) => {
 };
 
 const Dashboard = () => {
-  const owned = [
-    { name: 'Alpha', description: 'Owned workspace' },
-    { name: 'Delta', description: 'This is another workspace' },
-    { name: 'Delta', description: 'This is another workspace' },
-    { name: 'Delta', description: 'This is another workspace' },
-    { name: 'Delta', description: 'This is another workspace' },
-  ];
-  const member = [{ name: 'Beta' }];
-  const viewer = [{ name: 'Gamma' }];
+  const [workspaces, setWorkspaces] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setModalOpen] = useState(false);
   const [showOwned, setShowOwned] = useState(true);
   const [showMember, setShowMember] = useState(true);
   const [showViewer, setShowViewer] = useState(true);
+
+  const filterWorkspaces = (workspaces, role) => {
+    return workspaces
+      .filter(ws => ws.role === role)
+      .filter(ws => ws.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  };
+
+  const ownedWorkspaces = filterWorkspaces(workspaces, 'Admin');
+  const memberWorkspaces = filterWorkspaces(workspaces, 'Member');
+  const viewerWorkspaces = filterWorkspaces(workspaces, 'Viewer');
+
+  useEffect(() => {
+    const fetchWorkspaces = async () => {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        console.error("No token found");
+        return;
+      }
+
+      try {
+        const response = await axios.get('http://localhost:5137/api/workspaces', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setWorkspaces(response.data);
+
+      } catch (error) {
+        console.error('Error fetching workspaces:', error);
+      }
+    };
+
+    fetchWorkspaces();
+  }, []);
+
+  const handleCreateWorkspace = async (workspaceData) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const response = await axios.post('http://localhost:5137/api/workspaces', workspaceData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const createdWorkspace = response.data;
+
+      // Add the new workspace to the state with its role
+      setWorkspaces((prev) => [
+        ...prev,
+        {
+          workspaceId: createdWorkspace.workspaceId,
+          name: createdWorkspace.name,
+          description: createdWorkspace.description,
+          createdByUserId: createdWorkspace.createdByUserId,
+          role: createdWorkspace.role  // This will now contain the role
+        }
+      ]);
+
+    } catch (error) {
+      console.error('Error creating workspace:', error);
+    }
+  };
 
   const sectionStyle = {
     marginTop: '32px',
@@ -130,13 +292,13 @@ const Dashboard = () => {
   };
 
   const toggleButtonStyle = {
-    padding: '5px 12px',
-    fontSize: '14px',
+    padding: '6px 12px',
+    fontSize: '12px',
     borderRadius: '20px',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: 'var(--neutral-100)',
+    fontWeight: '500',
     border: '1px solid #ccc',
     cursor: 'pointer',
-    fontWeight: '600',
     transition: 'background-color 0.3s',
   };
 
@@ -186,7 +348,7 @@ const Dashboard = () => {
             {/* <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>Available Workspaces</h3> */}
             <H level={4} style={{ margin: 0 }}>Boost Your Productivity! Create a Workspace and Start Managing Your Projects Seamlessly.</H>
             {/* <p style={{ fontSize: '14px', color: '#888' }}>List of all available workspaces.</p> */}
-            <Button
+            <Button onClick={() => setModalOpen(true)}
               iconLeft={<svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
               </svg>} text="Create Workspace" color="primary" />
@@ -194,12 +356,17 @@ const Dashboard = () => {
         </div>
       </div>
 
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setModalOpen(false)}
+        onCreate={handleCreateWorkspace}
+      />
 
       {/* Owned Workspaces Section */}
       <div style={sectionStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <H level={4} style={{ fontSize: '20px', fontWeight: '600', color: '#333' }}>
-            Owned Workspaces ({owned.length}) {/* Owned Workspaces Header */}
+            Owned Workspaces ({ownedWorkspaces.length})
           </H>
           <button style={toggleButtonStyle} onClick={() => toggleVisibility('owned')}>
             {showOwned ? 'Hide' : 'Show'}
@@ -208,8 +375,16 @@ const Dashboard = () => {
         {showOwned && (
           <div style={horizontalScrollStyle}>
             <div style={scrollContainerStyle}>
-              {owned.map((ws, idx) => (
+              {/* {owned.map((ws, idx) => (
                 <WorkspaceCard key={idx} {...ws} />
+              ))} */}
+              {ownedWorkspaces.map((ws) => (
+                <WorkspaceCard
+                  key={ws.workspaceId}
+                  name={ws.name}
+                  description={ws.description}
+                  role={ws.role}
+                />
               ))}
             </div>
           </div>
@@ -220,7 +395,7 @@ const Dashboard = () => {
       <div style={sectionStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <H level={4} style={{ fontSize: '20px', fontWeight: '600', color: '#333' }}>
-            Member Workspaces ({member.length}) {/* Member Workspaces Header */}
+            Member Workspaces ({memberWorkspaces.length}) {/* Member Workspaces Header */}
           </H>
           <button style={toggleButtonStyle} onClick={() => toggleVisibility('member')}>
             {showMember ? 'Hide' : 'Show'}
@@ -229,8 +404,16 @@ const Dashboard = () => {
         {showMember && (
           <div style={horizontalScrollStyle}>
             <div style={scrollContainerStyle}>
-              {member.map((ws, idx) => (
+              {/* {member.map((ws, idx) => (
                 <WorkspaceCard key={idx} {...ws} />
+              ))} */}
+              {memberWorkspaces.map((ws) => (
+                <WorkspaceCard
+                  key={ws.workspaceId}
+                  name={ws.name}
+                  description={ws.description}
+                  role={ws.role}
+                />
               ))}
             </div>
           </div>
@@ -241,7 +424,7 @@ const Dashboard = () => {
       <div style={sectionStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <H level={4} style={{ fontSize: '20px', fontWeight: '600', color: '#333' }}>
-            Viewer Workspaces ({viewer.length}) {/* Viewer Workspaces Header */}
+            Viewer Workspaces ({viewerWorkspaces.length}) {/* Viewer Workspaces Header */}
           </H>
           <button style={toggleButtonStyle} onClick={() => toggleVisibility('viewer')}>
             {showViewer ? 'Hide' : 'Show'}
@@ -250,8 +433,16 @@ const Dashboard = () => {
         {showViewer && (
           <div style={horizontalScrollStyle}>
             <div style={scrollContainerStyle}>
-              {viewer.map((ws, idx) => (
+              {/* {viewer.map((ws, idx) => (
                 <WorkspaceCard key={idx} {...ws} />
+              ))} */}
+              {viewerWorkspaces.map((ws) => (
+                <WorkspaceCard
+                  key={ws.workspaceId}
+                  name={ws.name}
+                  description={ws.description}
+                  role={ws.role}
+                />
               ))}
             </div>
           </div>

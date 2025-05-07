@@ -9,7 +9,7 @@ namespace Final_Project_Backend.Services
     {
         Task<IEnumerable<Workspace>> GetWorkspacesByUser(int userId);
         Task<IEnumerable<WorkspaceResponseDto>> GetWorkspaceDtosByUser(int userId);
-        Task<Workspace> CreateWorkspace(int userId, WorkspaceCreateDto workspaceDto);
+        Task<WorkspaceResponseDto> CreateWorkspace(int userId, WorkspaceCreateDto workspaceDto);
         Task<bool> AddUserToWorkspace(int requestingUserId, int workspaceId, AddUserToWorkspaceDto dto);
         Task<IEnumerable<User>> GetUserWorkspaces(int workspaceId);
         Task<bool> RemoveUserFromWorkspace(int requestingUserId, int workspaceId, int userIdToRemove);

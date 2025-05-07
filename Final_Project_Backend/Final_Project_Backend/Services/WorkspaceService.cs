@@ -39,7 +39,8 @@ namespace Final_Project_Backend.Services
                     wu.Workspace.WorkspaceId,
                     wu.Workspace.Name,
                     wu.Workspace.Description,
-                    wu.Workspace.CreatedByUserId
+                    wu.Workspace.CreatedByUserId,
+                    wu.Role.ToString()
                 ))
                 .ToListAsync();
 
@@ -48,7 +49,7 @@ namespace Final_Project_Backend.Services
             return workspaces;
         }
 
-        public async Task<Workspace> CreateWorkspace(int userId, WorkspaceCreateDto workspaceDto)
+        public async Task<WorkspaceResponseDto> CreateWorkspace(int userId, WorkspaceCreateDto workspaceDto)
         {
             var user = await _userRepository.GetUserByIdAsync(userId);
             if (user == null)
@@ -56,36 +57,54 @@ namespace Final_Project_Backend.Services
                 throw new Exception("User not found");
             }
 
-            var workspace = new Workspace
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                Name = workspaceDto.Name,
-                Description = workspaceDto.Description,
-                CreatedByUserId = userId
-            };
+                var workspace = new Workspace
+                {
+                    Name = workspaceDto.Name,
+                    Description = workspaceDto.Description,
+                    CreatedByUserId = userId
+                };
 
-            _context.Workspaces.Add(workspace);
-            await _context.SaveChangesAsync();
+                _context.Workspaces.Add(workspace);
+                await _context.SaveChangesAsync();
 
-            var userWorkspace = new UserWorkspace
+                var userWorkspace = new UserWorkspace
+                {
+                    WorkspaceId = workspace.WorkspaceId,
+                    UserId = userId,
+                    Role = WorkspaceRole.Admin,
+                    // JoinedAt = DateTime.UtcNow,
+                    User = user
+                };
+
+                _context.UserWorkspaces.Add(userWorkspace);
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                return new WorkspaceResponseDto(
+                    workspace.WorkspaceId,
+                    workspace.Name,
+                    workspace.Description,
+                    workspace.CreatedByUserId,
+                    userWorkspace.Role.ToString()
+                );
+            }
+            catch (Exception ex)
             {
-                WorkspaceId = workspace.WorkspaceId,
-                UserId = userId,
-                Role = WorkspaceRole.Admin,
-                JoinedAt = DateTime.UtcNow,
-                User = user
-            };
-
-            _context.UserWorkspaces.Add(userWorkspace);
-            await _context.SaveChangesAsync();
-
-            return workspace;
+                Console.WriteLine($"Error creating workspace: {ex.Message}");
+                await transaction.RollbackAsync();
+                throw new Exception("Error creating workspace and user workspace");
+            }
         }
-
 
 
         public async Task<bool> AddUserToWorkspace(int requestingUserId, int workspaceId, AddUserToWorkspaceDto dto)
         {
-  
+
             var requestingUserRole = await _context.UserWorkspaces
                 .FirstOrDefaultAsync(wu => wu.WorkspaceId == workspaceId && wu.UserId == requestingUserId);
 
