@@ -8,13 +8,25 @@ import '../styles/layout.css';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
+const statusLabels = {
+  0: "Unstarted",
+  1: "Active",
+  2: "Completed",
+  3: "Archived",
+  4: "Removed",
+};
+
 const ProjectCard = ({ name, description, deadline, status }) => {
   const statusColors = {
-    unstarted: 'var(--error-color)',
+    unstarted: 'var(--neutral-500)',
     active: 'var(--warning-color)',
     completed: 'var(--success-color)',
     archived: 'var(--info-color)',
+    removed: 'var(--error-color)',
+    default: '#ccc'
   };
+
+  const statusLabel = statusLabels[status];
 
   return (
     <div style={{
@@ -24,7 +36,7 @@ const ProjectCard = ({ name, description, deadline, status }) => {
       width: '250px',
       margin: '12px',
       boxShadow: 'var(--shadow-light)',
-      borderLeft: `6px solid ${statusColors[status] || '#ccc'}`,
+      borderLeft: `6px solid ${statusColors[statusLabel?.toLowerCase()] || statusColors.default}`,
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between'
@@ -53,12 +65,111 @@ const InputWithSVG = ({ searchTerm, setSearchTerm }) => (
   </div>
 );
 
+const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [deadline, setDeadline] = useState('');
+
+  const handleCreate = () => {
+    const newProject = {
+      name,
+      description,
+      status: "Unstarted",
+      startDate,
+      deadline,
+    };
+    onCreate(newProject);
+    setName('');
+    setDescription('');
+    setStartDate('');
+    setDeadline('');
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h3>Create Project</h3>
+        <input
+          type="text"
+          placeholder="Project Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <textarea
+          placeholder="Project Description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        <input
+          type="date"
+          placeholder="Start Date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+        />
+        <input
+          type="date"
+          placeholder="Deadline"
+          value={deadline}
+          onChange={(e) => setDeadline(e.target.value)}
+        />
+        <Button text="Create Project" onClick={handleCreate} />
+        <Button text="Cancel" onClick={onClose} color="secondary" />
+      </div>
+    </div>
+  );
+};
+
 
 const Workspace = () => {
   const { workspaceId } = useParams();
   const [workspace, setWorkspace] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showUserModal, setShowUserModal] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [projects, setProjects] = useState([]);
+  // const [showUserModal, setShowUserModal] = useState(false);
+
+  useEffect(() => {
+    fetchProjects();
+  }, [workspaceId]);
+
+  const fetchProjects = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await axios.get(`http://localhost:5137/api/projects/workspaces/${workspaceId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setProjects(response.data);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    }
+  };
+
+  const handleCreateProject = async (newProject) => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await axios.post(`http://localhost:5137/api/projects/workspaces/${workspaceId}`, {
+        ...newProject,
+        status: 0
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setProjects((prev) => [...prev, response.data]);
+    } catch (error) {
+      console.error('Error creating project:', error);
+    }
+  };
+
+  const filteredProjects = projects.filter((project) =>
+    project.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   useEffect(() => {
     const fetchWorkspace = async () => {
@@ -82,17 +193,6 @@ const Workspace = () => {
   if (!workspace) {
     return <div>Loading workspace...</div>;
   }
-
-  const projects = [
-    { name: 'Project Alpha', description: 'Redesign UI for dashboard', deadline: '2025-05-20', status: 'active' },
-    { name: 'Project Beta', description: 'Fix login bug', deadline: '2025-05-10', status: 'unstarted' },
-    { name: 'Project Gamma', description: 'Deploy to production', deadline: '2025-04-30', status: 'completed' },
-    { name: 'Project Delta', description: 'Archive old data', deadline: '2025-05-05', status: 'archived' },
-  ];
-
-  const filteredProjects = projects.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div style={{ fontFamily: 'Poppins, sans-serif' }}>
@@ -121,7 +221,7 @@ const Workspace = () => {
           <H level={4} style={{ margin: 0 }}>
             Empower Your Team — Start a Project and Collaborate Effortlessly to Turn Ideas into Action!
           </H>
-          <Button
+          <Button onClick={() => setIsModalOpen(true)}
             iconLeft={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
               viewBox="0 0 24 24">
               <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
@@ -133,14 +233,30 @@ const Workspace = () => {
         </div>
       </div>
 
+      <CreateProjectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onCreate={handleCreateProject}
+      />
+
       <div style={{
         display: 'flex',
         flexWrap: 'wrap',
         justifyContent: 'flex-start'
       }}>
-        {filteredProjects.map((project, idx) => (
-          <ProjectCard key={idx} {...project} />
-        ))}
+        {filteredProjects.length > 0 ? (
+          filteredProjects.map((project) => (
+            <ProjectCard
+              key={project.projectId}
+              name={project.name}
+              description={project.description}
+              deadline={project.deadline}
+              status={project.status}
+            />
+          ))
+        ) : (
+          <p>No projects found.</p>
+        )}
       </div>
     </div>
   );
