@@ -70,7 +70,7 @@ namespace Final_Project_Backend.Services
                 var notification = new Notification
                 {
                     UserId = userId,
-                    NotificationType = type,
+                    // NotificationType = type,
                     Message = message,
                     TaskId = taskId, // Nullable TaskId
                     CreatedAt = DateTime.UtcNow,
