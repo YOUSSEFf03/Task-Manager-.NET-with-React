@@ -29,14 +29,14 @@ namespace Final_Project_Backend.Services
                 throw new UnauthorizedAccessException("User is not part of this workspace");
             }
 
-             var project = new Project
-    {
-        WorkspaceId = workspaceId,
-        Name = projectDto.Name ?? string.Empty, 
-        Description = projectDto.Description ?? string.Empty, 
-        Status = "Unstarted",
-        CreatedByUserId = userId
-    };
+            var project = new Project
+            {
+                WorkspaceId = workspaceId,
+                Name = projectDto.Name ?? string.Empty, 
+                Description = projectDto.Description ?? string.Empty, 
+                Status = Enum.Parse<ProjectStatus>("Unstarted"), // Convert string to enum
+                CreatedByUserId = userId
+            };
 
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
@@ -67,8 +67,10 @@ namespace Final_Project_Backend.Services
             var task = new TaskModel
             {
                 ProjectId = projectId,
-                Priority = taskDto.Priority,
-                Status = "ToDo",
+                Title = taskDto.Title,
+                Description = taskDto.Description,
+                Priority = Enum.Parse<TaskPriority>(taskDto.Priority), // Convert string to enum
+                Status = Enum.Parse<Final_Project_Backend.Models.TaskStatus>("ToDo"), // Convert string to enum
                 DueDate = taskDto.DueDate,
                 CreatedAt = DateTime.UtcNow,
                 CreatedByUserId = userId,
@@ -107,8 +109,10 @@ namespace Final_Project_Backend.Services
             var subtask = new TaskModel
             {
                 ProjectId = parentTask.ProjectId,
-                Priority = subtaskDto.Priority,
-                Status = "ToDo",
+                Title = subtaskDto.Title,
+                Description = subtaskDto.Description,
+                Priority = Enum.Parse<TaskPriority>(subtaskDto.Priority), // Convert string to enum
+                Status = Enum.Parse<Final_Project_Backend.Models.TaskStatus>("ToDo"), // Convert string to enum
                 DueDate = subtaskDto.DueDate,
                 CreatedAt = DateTime.UtcNow,
                 CreatedByUserId = userId,
@@ -123,16 +127,13 @@ namespace Final_Project_Backend.Services
         }
     
 
-   public async Task<IEnumerable<ProjectResponseDto>> GetProjects(int workspaceId, int userId)
+        public async Task<IEnumerable<ProjectResponseDto>> GetProjects(int workspaceId, int userId)
         {
+            var hasAccess = await _context.UserWorkspaces
+                .AnyAsync(uw => uw.WorkspaceId == workspaceId && uw.UserId == userId);
 
-
-        var hasAccess = await _context.UserWorkspaces
-        .AnyAsync(uw => uw.WorkspaceId == workspaceId && uw.UserId == userId);
-
-    if (!hasAccess)
-        throw new UnauthorizedAccessException("User not in workspace");
-
+            if (!hasAccess)
+                throw new UnauthorizedAccessException("User not in workspace");
 
             return await _context.Projects
                 .Where(p => p.WorkspaceId == workspaceId)
@@ -142,23 +143,22 @@ namespace Final_Project_Backend.Services
                     ProjectId = p.ProjectId,
                     Name = p.Name,
                     Description = p.Description,
-                    Status = p.Status,
+                    Status = p.Status.ToString(),
                     WorkspaceId = p.WorkspaceId,
                     CreatedByUserId = p.CreatedByUserId
                 })
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<TaskResponseDto>> GetTasks(int projectId , int userId)
+        public async Task<IEnumerable<TaskResponseDto>> GetTasks(int projectId, int userId)
         {
+            var project = await _context.Projects
+                .Include(p => p.Workspace)
+                .ThenInclude(w => w.UserWorkspaces)
+                .FirstOrDefaultAsync(p => p.ProjectId == projectId);
 
-    var project = await _context.Projects
-        .Include(p => p.Workspace)
-        .ThenInclude(w => w.UserWorkspaces)
-        .FirstOrDefaultAsync(p => p.ProjectId == projectId);
-
-    if (project?.Workspace.UserWorkspaces.All(uw => uw.UserId != userId) == true)
-        throw new UnauthorizedAccessException("No access to project");
+            if (project?.Workspace.UserWorkspaces.All(uw => uw.UserId != userId) == true)
+                throw new UnauthorizedAccessException("No access to project");
 
             return await _context.Tasks
                 .Where(t => t.ProjectId == projectId && t.ParentTaskId == null) 
@@ -170,8 +170,8 @@ namespace Final_Project_Backend.Services
                     ProjectId = t.ProjectId,
                     Title = "", // Add this if needed in DTO
                     Description = "", // Add this if needed in DTO
-                    Priority = t.Priority,
-                    Status = t.Status,
+                    Priority = t.Priority.ToString(),
+                    Status = t.Status.ToString(),
                     DueDate = t.DueDate,
                     CreatedAt = t.CreatedAt,
                     CreatedByUserId = t.CreatedByUserId,
@@ -181,25 +181,23 @@ namespace Final_Project_Backend.Services
                 .ToListAsync();
         }
 
-       
-        public async Task<IEnumerable<TaskResponseDto>> GetSubtasks(int parentTaskId ,  int userId)
+        public async Task<IEnumerable<TaskResponseDto>> GetSubtasks(int parentTaskId, int userId)
         {
-
-           var parentTask = await _context.Tasks
-        .Include(t => t.Project)
-            .ThenInclude(p => p.Workspace)
+            var parentTask = await _context.Tasks
+                .Include(t => t.Project)
+                .ThenInclude(p => p.Workspace)
                 .ThenInclude(w => w.UserWorkspaces)
-        .FirstOrDefaultAsync(t => t.TaskId == parentTaskId);
+                .FirstOrDefaultAsync(t => t.TaskId == parentTaskId);
 
-    if (parentTask == null)
-    {
-        throw new KeyNotFoundException("Parent task not found");
-    }
+            if (parentTask == null)
+            {
+                throw new KeyNotFoundException("Parent task not found");
+            }
 
-    if (!parentTask.Project.Workspace.UserWorkspaces.Any(uw => uw.UserId == userId))
-    {
-        throw new UnauthorizedAccessException("User doesn't have access to this workspace");
-    }
+            if (!parentTask.Project.Workspace.UserWorkspaces.Any(uw => uw.UserId == userId))
+            {
+                throw new UnauthorizedAccessException("User doesn't have access to this workspace");
+            }
 
             return await _context.Tasks
                 .Where(t => t.ParentTaskId == parentTaskId)
@@ -211,8 +209,8 @@ namespace Final_Project_Backend.Services
                     ProjectId = t.ProjectId,
                     Title = "", // Add this if needed in DTO
                     Description = "", 
-                    Priority = t.Priority,
-                    Status = t.Status,
+                    Priority = t.Priority.ToString(),
+                    Status = t.Status.ToString(),
                     DueDate = t.DueDate,
                     CreatedAt = t.CreatedAt,
                     CreatedByUserId = t.CreatedByUserId,
@@ -222,113 +220,137 @@ namespace Final_Project_Backend.Services
                 .ToListAsync();
         }
 
-
-
-
-
         public async Task<Project?> UpdateProject(int userId, int projectId, ProjectUpdateDto dto)
-{
-    var project = await _context.Projects
-        .Include(p => p.Workspace)
-        .ThenInclude(w => w.UserWorkspaces)
-        .FirstOrDefaultAsync(p => p.ProjectId == projectId);
-
-    if (project?.Workspace.UserWorkspaces.FirstOrDefault(uw => uw.UserId == userId) == null)
-        return null;
-
-    project.Name = dto.Name ?? project.Name;
-    project.Description = dto.Description ?? project.Description;
-    project.Status = dto.Status ?? project.Status;
-    
-    await _context.SaveChangesAsync();
-    return project;
-}
-
-
-
-public async Task<bool> DeleteProject(int userId, int projectId)
-{
-    var project = await _context.Projects
-        .Include(p => p.Workspace)
-        .ThenInclude(w => w.UserWorkspaces)
-        .FirstOrDefaultAsync(p => p.ProjectId == projectId);
-
-    if (project?.Workspace.UserWorkspaces.FirstOrDefault(uw => uw.UserId == userId) == null)
-        return false;
-
-    _context.Projects.Remove(project);
-    await _context.SaveChangesAsync();
-    return true;
-}
-
-public async Task<TaskModel?> UpdateTask(int userId, int taskId, TaskUpdateDto taskDto)
-{
-    // Check if task exists and user has permission
-    var task = await _context.Tasks
-        .Include(t => t.Project)
-            .ThenInclude(p => p.Workspace)
-                .ThenInclude(w => w.UserWorkspaces)
-        .FirstOrDefaultAsync(t => t.TaskId == taskId);
-
-    if (task == null)
-    {
-        throw new KeyNotFoundException("Task not found");
-    }
-
-    // Verify user has permission (admin or member)
-    var userRole = task.Project.Workspace.UserWorkspaces
-        .FirstOrDefault(wu => wu.UserId == userId)?.Role;
-
-    if (userRole == null || userRole == WorkspaceRole.Viewer)
-    {
-        throw new UnauthorizedAccessException("User doesn't have permission to edit tasks");
-    }
-
-    // Validate assigned user if provided
-    if (taskDto.AssignedToUserId.HasValue)
-    {
-        var userExists = await _context.Users
-            .AnyAsync(u => u.UserId == taskDto.AssignedToUserId.Value);
-        
-        if (!userExists)
         {
-            throw new KeyNotFoundException("Assigned user not found");
+            var project = await _context.Projects
+                .Include(p => p.Workspace)
+                .ThenInclude(w => w.UserWorkspaces)
+                .FirstOrDefaultAsync(p => p.ProjectId == projectId);
+
+            if (project?.Workspace.UserWorkspaces.FirstOrDefault(uw => uw.UserId == userId) == null)
+                return null;
+
+            project.Name = dto.Name ?? project.Name;
+            project.Description = dto.Description ?? project.Description;
+            project.Status = Enum.TryParse(dto.Status, out ProjectStatus status) ? status : project.Status; // Safely parse enum
+            
+            await _context.SaveChangesAsync();
+            return project;
+        }
+
+        public async Task<bool> DeleteProject(int userId, int projectId)
+        {
+            var project = await _context.Projects
+                .Include(p => p.Workspace)
+                .ThenInclude(w => w.UserWorkspaces)
+                .FirstOrDefaultAsync(p => p.ProjectId == projectId);
+
+            if (project?.Workspace.UserWorkspaces.FirstOrDefault(uw => uw.UserId == userId) == null)
+                return false;
+
+            _context.Projects.Remove(project);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<TaskModel?> UpdateTask(int userId, int taskId, TaskUpdateDto taskDto)
+        {
+            // Check if task exists and user has permission
+            var task = await _context.Tasks
+                .Include(t => t.Project)
+                .ThenInclude(p => p.Workspace)
+                .ThenInclude(w => w.UserWorkspaces)
+                .FirstOrDefaultAsync(t => t.TaskId == taskId);
+
+            if (task == null)
+            {
+                throw new KeyNotFoundException("Task not found");
+            }
+
+            // Verify user has permission (admin or member)
+            var userRole = task.Project.Workspace.UserWorkspaces
+                .FirstOrDefault(wu => wu.UserId == userId)?.Role;
+
+            if (userRole == null || userRole == WorkspaceRole.Viewer)
+            {
+                throw new UnauthorizedAccessException("User doesn't have permission to edit tasks");
+            }
+
+            // Validate assigned user if provided
+            if (taskDto.AssignedToUserId.HasValue)
+            {
+                var userExists = await _context.Users
+                    .AnyAsync(u => u.UserId == taskDto.AssignedToUserId.Value);
+                
+                if (!userExists)
+                {
+                    throw new KeyNotFoundException("Assigned user not found");
+                }
+            }
+
+            // Update only the modifiable fields based on your Task model
+            if (taskDto.Priority != null) task.Priority = Enum.Parse<TaskPriority>(taskDto.Priority); // Convert string to enum
+            if (taskDto.Status != null) task.Status = Enum.Parse<Final_Project_Backend.Models.TaskStatus>(taskDto.Status); // Convert string to enum
+            if (taskDto.DueDate != null) task.DueDate = taskDto.DueDate;
+            if (taskDto.AssignedToUserId != null) task.AssignedToUserId = taskDto.AssignedToUserId;
+
+            await _context.SaveChangesAsync();
+            return task;
+        }
+
+        public async Task<bool> DeleteTask(int userId, int taskId)
+        {
+            var task = await _context.Tasks
+                .Include(t => t.Project)
+                .ThenInclude(p => p.Workspace)
+                .ThenInclude(w => w.UserWorkspaces)
+                .FirstOrDefaultAsync(t => t.TaskId == taskId);
+
+            if (task?.Project.Workspace.UserWorkspaces.FirstOrDefault(uw => uw.UserId == userId) == null)
+                return false;
+
+            _context.Tasks.Remove(task);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> HasProjectPermission(int userId, int projectId, bool allowViewer = false)
+        {
+            var project = await _context.Projects
+                .Include(p => p.Workspace)
+                .ThenInclude(w => w.UserWorkspaces)
+                .FirstOrDefaultAsync(p => p.ProjectId == projectId);
+
+            if (project == null) return false;
+
+            var userWorkspace = project.Workspace.UserWorkspaces
+                .FirstOrDefault(uw => uw.UserId == userId);
+
+            if (userWorkspace == null) return false;
+            
+            if (allowViewer) return true; 
+            
+            return userWorkspace.Role == WorkspaceRole.Admin || 
+                   userWorkspace.Role == WorkspaceRole.Member;
+        }
+
+        public async Task<bool> HasWorkspacePermission(int userId, int workspaceId, bool allowViewer = false)
+        {
+            var workspace = await _context.Workspaces
+                .Include(w => w.UserWorkspaces)
+                .FirstOrDefaultAsync(w => w.WorkspaceId == workspaceId);
+
+            if (workspace == null) return false;
+
+            var userWorkspace = workspace.UserWorkspaces
+                .FirstOrDefault(uw => uw.UserId == userId);
+
+            if (userWorkspace == null) return false;
+            
+            if (allowViewer) return true;
+            
+            return userWorkspace.Role == WorkspaceRole.Admin || 
+                   userWorkspace.Role == WorkspaceRole.Member;
         }
     }
-
-    // Update only the modifiable fields based on your Task model
-    if (taskDto.Priority != null) task.Priority = taskDto.Priority;
-    if (taskDto.Status != null) task.Status = taskDto.Status;
-    if (taskDto.DueDate != null) task.DueDate = taskDto.DueDate;
-    if (taskDto.AssignedToUserId != null) task.AssignedToUserId = taskDto.AssignedToUserId;
-
-    await _context.SaveChangesAsync();
-    return task;
-}
-
-
-
-public async Task<bool> DeleteTask(int userId, int taskId)
-{
-    var task = await _context.Tasks
-        .Include(t => t.Project)
-        .ThenInclude(p => p.Workspace)
-        .ThenInclude(w => w.UserWorkspaces)
-        .FirstOrDefaultAsync(t => t.TaskId == taskId);
-
-    if (task?.Project.Workspace.UserWorkspaces.FirstOrDefault(uw => uw.UserId == userId) == null)
-        return false;
-
-    _context.Tasks.Remove(task);
-    await _context.SaveChangesAsync();
-    return true;
-}
-
-
-
-
-
-
-
-}
 }

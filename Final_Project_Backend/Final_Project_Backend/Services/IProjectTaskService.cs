@@ -17,5 +17,7 @@ namespace Final_Project_Backend.Services
         Task<bool> DeleteProject(int userId, int projectId);
         Task<Task?> UpdateTask(int userId, int taskId, TaskUpdateDto dto);
         Task<bool> DeleteTask(int userId, int taskId);
+        Task<bool> HasWorkspacePermission(int userId, int workspaceId, bool allowViewer = false);
+        Task<bool> HasProjectPermission(int userId, int projectId, bool allowViewer = false);
     }
 }

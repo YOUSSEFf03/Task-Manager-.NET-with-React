@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 namespace Final_Project_Backend.DTOs;
 
-
 public class TaskUpdateDto
 {
     [MaxLength(200)]
