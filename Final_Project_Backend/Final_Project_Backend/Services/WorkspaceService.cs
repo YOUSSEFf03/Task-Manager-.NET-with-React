@@ -263,5 +263,59 @@ namespace Final_Project_Backend.Services
 
             return isUserInWorkspace;
         }
+
+        public async Task<Comment?> AddCommentToTask(int userId, int taskId, string content)
+        {
+            var task = await _context.Tasks
+                .Include(t => t.Project)
+                .FirstOrDefaultAsync(t => t.TaskId == taskId);
+
+            if (task == null)
+                return null;
+
+            var comment = new Comment
+            {
+                TaskId = taskId,
+                UserId = userId,
+                Content = content,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Comments.Add(comment);
+            await _context.SaveChangesAsync();
+
+            return comment;
+        }
+
+        public async Task<bool> MentionUserInComment(int commentId, int mentionedUserId)
+        {
+            var comment = await _context.Comments
+                .Include(c => c.Task)
+                .ThenInclude(t => t.Project)
+                .FirstOrDefaultAsync(c => c.CommentId == commentId);
+
+            if (comment == null)
+                return false;
+
+            var mention = new Mention
+            {
+                CommentId = commentId,
+                UserId = mentionedUserId,
+                MentionedAt = DateTime.UtcNow
+            };
+
+            _context.Mentions.Add(mention);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<IEnumerable<Comment>> GetCommentsByTask(int taskId)
+        {
+            return await _context.Comments
+                .Include(c => c.User)
+                .Where(c => c.TaskId == taskId)
+                .ToListAsync();
+        }
     }
 }

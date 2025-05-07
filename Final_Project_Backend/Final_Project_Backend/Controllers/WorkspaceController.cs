@@ -155,4 +155,59 @@ public class WorkspaceController : ControllerBase
         var result = await _workspaceService.AssignTagToTask(userId, taskId, tagId);
         return result ? NoContent() : BadRequest("Failed to assign tag to task");
     }
+
+    [HttpPost("tasks/{taskId}/comments")]
+    public async Task<IActionResult> AddCommentToTask(int taskId, [FromBody] AddCommentDto dto)
+    {
+        if (dto == null || string.IsNullOrWhiteSpace(dto.Content))
+        {
+            return BadRequest(new { error = "The content field is required." });
+        }
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaim.Value);
+
+        var comment = await _workspaceService.AddCommentToTask(userId, taskId, dto.Content);
+        return comment != null ? Ok(comment) : BadRequest("Failed to add comment");
+    }
+
+    [HttpPost("comments/{commentId}/mentions")]
+    public async Task<IActionResult> MentionUserInComment(int commentId, [FromBody] MentionUserDto dto)
+    {
+        if (dto == null || dto.MentionedUserId <= 0)
+        {
+            return BadRequest(new { error = "Invalid mentionedUserId." });
+        }
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+
+        var result = await _workspaceService.MentionUserInComment(commentId, dto.MentionedUserId);
+        return result ? NoContent() : BadRequest("Failed to mention user");
+    }
+
+    [HttpGet("projects/{projectId}/comments")]
+    
+
+    [HttpGet("tasks/{taskId}/comments")]
+    public async Task<IActionResult> GetCommentsByTask(int taskId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaim.Value);
+
+        // Ensure the user has access to the task
+        var comments = await _workspaceService.GetCommentsByTask(taskId);
+        return Ok(comments);
+    }
 }

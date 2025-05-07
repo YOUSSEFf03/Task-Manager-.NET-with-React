@@ -18,13 +18,5 @@ namespace Final_Project_Backend.Models
         public User User { get; set; } = null!;
         public ICollection<Mention> Mentions { get; set; } = new List<Mention>();
 
-
-        
-
-
-        
-        
     }
-
-    
 }

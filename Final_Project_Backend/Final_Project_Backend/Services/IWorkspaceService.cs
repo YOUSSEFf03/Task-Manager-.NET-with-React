@@ -23,5 +23,9 @@ namespace Final_Project_Backend.Services
         Task<Tag?> CreateTag(int userId, int workspaceId, CreateTagDto dto);
         Task<bool> AssignTagToTask(int userId, int taskId, int tagId);
         Task<bool> HasAccessToTaskWorkspace(int userId, int taskId);
+
+        Task<Comment?> AddCommentToTask(int userId, int taskId, string content);
+        Task<bool> MentionUserInComment(int commentId, int mentionedUserId);
+        Task<IEnumerable<Comment>> GetCommentsByTask(int taskId);
     }
 }
