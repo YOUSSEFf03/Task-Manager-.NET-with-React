@@ -19,6 +19,34 @@ namespace Final_Project_Backend.Services
             _userRepository = userRepository;
         }
 
+        public async Task<WorkspaceResponseDto?> GetWorkspaceById(int userId, int workspaceId)
+        {
+            var workspace = await _context.Workspaces
+                .Include(w => w.UserWorkspaces)
+                .FirstOrDefaultAsync(w => w.WorkspaceId == workspaceId);
+
+            if (workspace == null)
+            {
+                return null;
+            }
+
+            var userWorkspace = workspace.UserWorkspaces
+                .FirstOrDefault(uw => uw.UserId == userId);
+
+            if (userWorkspace == null)
+            {
+                return null;
+            }
+
+            return new WorkspaceResponseDto(
+                workspace.WorkspaceId,
+                workspace.Name,
+                workspace.Description,
+                workspace.CreatedByUserId,
+                userWorkspace.Role.ToString()
+            );
+        }
+
         public async Task<IEnumerable<Workspace>> GetWorkspacesByUser(int userId)
         {
             return await _context.UserWorkspaces
@@ -330,7 +358,7 @@ namespace Final_Project_Backend.Services
         }
 
 
-        
+
 
         public async Task<IEnumerable<Comment>> GetCommentsByTask(int taskId)
         {
@@ -348,13 +376,13 @@ namespace Final_Project_Backend.Services
         }
 
 
-public async Task<bool> IsWorkspaceAdmin(int userId, int workspaceId)
-{
-    var userWorkspace = await _context.UserWorkspaces
-        .FirstOrDefaultAsync(uw => uw.UserId == userId && uw.WorkspaceId == workspaceId);
-        
-    return userWorkspace?.Role == WorkspaceRole.Admin;
-}
+        public async Task<bool> IsWorkspaceAdmin(int userId, int workspaceId)
+        {
+            var userWorkspace = await _context.UserWorkspaces
+                .FirstOrDefaultAsync(uw => uw.UserId == userId && uw.WorkspaceId == workspaceId);
+
+            return userWorkspace?.Role == WorkspaceRole.Admin;
+        }
 
 
 

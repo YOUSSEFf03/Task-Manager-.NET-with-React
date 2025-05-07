@@ -5,6 +5,7 @@ import '../styles/inputSearch.css';
 import backgroundImage from "../assets/Group 285.png";
 import '../styles/dashboard.css';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Modal = ({ isOpen, onClose, onCreate }) => {
   const [name, setName] = useState('');
@@ -108,7 +109,13 @@ const Modal = ({ isOpen, onClose, onCreate }) => {
   );
 };
 
-const WorkspaceCard = ({ name, description, role }) => {
+const WorkspaceCard = ({ workspaceId, name, description, role }) => {
+  const navigate = useNavigate();
+
+  const handleCardClick = () => {
+    navigate(`/workspace/${workspaceId}`);
+  };
+
   const cardStyle = {
     display: 'flex',
     alignItems: 'center',
@@ -152,7 +159,7 @@ const WorkspaceCard = ({ name, description, role }) => {
   };
 
   return (
-    <div style={cardStyle}>
+    <div style={cardStyle} onClick={handleCardClick}>
       <div style={iconStyle}>{name.charAt(0).toUpperCase()}</div>
       <div>
         <h3 style={nameStyle}>{name}</h3>
@@ -320,7 +327,7 @@ const Dashboard = () => {
         alignItems: 'center',
         marginBottom: '24px',
       }}>
-        <H level={2} style={{ margin: 0 }}>Workspaces</H>
+        <H level={3} style={{ margin: 0 }}>Workspaces</H>
         <InputWithSVG searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
       </div>
 
@@ -381,6 +388,7 @@ const Dashboard = () => {
               {ownedWorkspaces.map((ws) => (
                 <WorkspaceCard
                   key={ws.workspaceId}
+                  workspaceId={ws.workspaceId}
                   name={ws.name}
                   description={ws.description}
                   role={ws.role}
@@ -410,6 +418,7 @@ const Dashboard = () => {
               {memberWorkspaces.map((ws) => (
                 <WorkspaceCard
                   key={ws.workspaceId}
+                  workspaceId={ws.workspaceId}
                   name={ws.name}
                   description={ws.description}
                   role={ws.role}
@@ -439,6 +448,7 @@ const Dashboard = () => {
               {viewerWorkspaces.map((ws) => (
                 <WorkspaceCard
                   key={ws.workspaceId}
+                  workspaceId={ws.workspaceId}
                   name={ws.name}
                   description={ws.description}
                   role={ws.role}

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import H from '../components/H';
 import Button from '../components/Button';
 import '../styles/inputSearch.css';
 import backgroundImage from "../assets/Group 285.png";
 import '../styles/dashboard.css';
-import '../styles/layout.css'
+import '../styles/layout.css';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
 
 const ProjectCard = ({ name, description, deadline, status }) => {
   const statusColors = {
@@ -51,89 +53,35 @@ const InputWithSVG = ({ searchTerm, setSearchTerm }) => (
   </div>
 );
 
-const UserModal = ({ show, onClose }) => {
-  if (!show) return null;
-
-  const users = [
-    { name: 'Demo User', role: 'Admin' },
-    { name: 'Alex Smith', role: 'Member' },
-    { name: 'Jane Doe', role: 'Viewer' },
-  ];
-
-  return (
-    <div style={{
-      position: 'fixed',
-      top: 0, left: 0,
-      width: '100%',
-      height: '100%',
-      backgroundColor: 'rgba(0,0,0,0.3)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 1000,
-    }}>
-      <div style={{
-        width: '500px',
-        background: '#fff',
-        borderRadius: '10px',
-        boxShadow: 'var(--shadow-light)',
-        padding: '24px',
-        position: 'relative',
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '16px'
-        }}>
-          <H level={3} style={{ margin: 0 }}>Workspace Users Setting</H>
-          <button onClick={onClose} style={{
-            background: 'transparent',
-            border: 'none',
-            fontSize: '20px',
-            cursor: 'pointer',
-          }}>×</button>
-        </div>
-
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-          <InputWithSVG searchTerm={''} setSearchTerm={() => { }} />
-          <Button text="Add User" color="primary" />
-        </div>
-
-        <H level={4} style={{ marginBottom: '12px' }}>Who has access</H>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {users.map((user, idx) => (
-            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: '#EEE',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                fontWeight: 'bold',
-                color: '#555'
-              }}>
-                {user.name.charAt(0)}
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-  <div style={{ fontWeight: '500' }}>{user.name}</div>
-  <div style={{ fontSize: '12px', color: '#888' }}>{user.role}</div>
-</div>
-
-
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const Workspace = () => {
+  const { workspaceId } = useParams();
+  const [workspace, setWorkspace] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showUserModal, setShowUserModal] = useState(false);
+
+  useEffect(() => {
+    const fetchWorkspace = async () => {
+      const token = localStorage.getItem('token');
+
+      try {
+        const response = await axios.get(`http://localhost:5137/api/workspaces/${workspaceId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setWorkspace(response.data);
+      } catch (error) {
+        console.error('Error fetching workspace:', error);
+      }
+    };
+
+    fetchWorkspace();
+  }, [workspaceId]);
+
+  if (!workspace) {
+    return <div>Loading workspace...</div>;
+  }
 
   const projects = [
     { name: 'Project Alpha', description: 'Redesign UI for dashboard', deadline: '2025-05-20', status: 'active' },
@@ -147,19 +95,16 @@ const Workspace = () => {
   );
 
   return (
-    <div style={{ fontFamily: 'Poppins, sans-serif', padding: '24px' }}>
-      <UserModal show={showUserModal} onClose={() => setShowUserModal(false)} />
-
+    <div style={{ fontFamily: 'Poppins, sans-serif' }}>
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: '24px',
       }}>
-        <H level={2} style={{ margin: 0 }}>Workspace Projects</H>
+        <H level={3} style={{ margin: 0 }}>{workspace.name}</H>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
           <InputWithSVG searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-          <Button text="Users Setting" onClick={() => setShowUserModal(true)} color="secondary" />
         </div>
       </div>
 
@@ -172,9 +117,9 @@ const Workspace = () => {
         borderRadius: 'var(--radius-16)',
         marginBottom: '32px',
       }}>
-        <div style={{ width: '65%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className='banner-content-dashboard' style={{ width: '65%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <H level={4} style={{ margin: 0 }}>
-            Boost Your Productivity! Create a Workspace and Start Managing Your Projects Seamlessly.
+            Empower Your Team — Start a Project and Collaborate Effortlessly to Turn Ideas into Action!
           </H>
           <Button
             iconLeft={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"

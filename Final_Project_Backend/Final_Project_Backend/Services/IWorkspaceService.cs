@@ -8,7 +8,8 @@ namespace Final_Project_Backend.Services
 {
     public interface IWorkspaceService
     {
-         Task<IEnumerable<Workspace>> GetWorkspacesByUser(int userId);
+        Task<IEnumerable<Workspace>> GetWorkspacesByUser(int userId);
+        Task<WorkspaceResponseDto?> GetWorkspaceById(int userId, int workspaceId);
         Task<IEnumerable<WorkspaceResponseDto>> GetWorkspaceDtosByUser(int userId);
         Task<WorkspaceResponseDto> CreateWorkspace(int userId, WorkspaceCreateDto workspaceDto);
         Task<bool> AddUserToWorkspace(int requestingUserId, int workspaceId, AddUserToWorkspaceDto dto);
@@ -30,6 +31,6 @@ namespace Final_Project_Backend.Services
 
         Task<IEnumerable<User>> SearchUsers(string query);
         Task<bool> IsWorkspaceAdmin(int userId, int workspaceId);
-      
+
     }
 }
