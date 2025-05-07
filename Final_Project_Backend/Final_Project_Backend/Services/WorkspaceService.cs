@@ -184,14 +184,20 @@ namespace Final_Project_Backend.Services
             return true;
         }
 
-        public async Task<IEnumerable<User>> GetUserWorkspaces(int workspaceId)
+       public async Task<IEnumerable<UserWithRoleDto>> GetUserWorkspaces(int workspaceId)
+{
+    return await _context.UserWorkspaces
+        .Where(wu => wu.WorkspaceId == workspaceId)
+        .Include(wu => wu.User)
+        .Select(wu => new UserWithRoleDto
         {
-            return await _context.UserWorkspaces
-                .Where(wu => wu.WorkspaceId == workspaceId)
-                .Include(wu => wu.User)
-                .Select(wu => wu.User)
-                .ToListAsync();
-        }
+            UserId = wu.User.UserId,
+            FullName = wu.User.FullName,
+            Email = wu.User.Email,
+            Role = wu.Role.ToString()
+        })
+        .ToListAsync();
+}
 
         public async Task<bool> RemoveUserFromWorkspace(int requestingUserId, int workspaceId, int userIdToRemove)
         {
@@ -330,12 +336,18 @@ namespace Final_Project_Backend.Services
                 .AnyAsync(uw => uw.WorkspaceId == task.Project.Workspace.WorkspaceId && uw.UserId == userId);
 
             return isUserInWorkspace;
-        }
+        }   
 
-        public async Task<IEnumerable<User>> SearchUsers(string query)
+        public async Task<IEnumerable<UserSearchDto>> SearchUsers(string query)
         {
             return await _context.Users
                 .Where(u => u.FullName.Contains(query) || u.Email.Contains(query))
+                .Select(u => new UserSearchDto
+                {
+                    Id = u.UserId,
+                    Email = u.Email,
+                    FullName = u.FullName
+                })
                 .ToListAsync();
         }
 
