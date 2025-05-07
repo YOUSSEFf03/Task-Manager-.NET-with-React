@@ -20,5 +20,8 @@ namespace Final_Project_Backend.Services
 
         Task<Dictionary<WorkspaceRole, int>> CountWorkspacesByRole(int userId);
 
+        Task<Tag?> CreateTag(int userId, int workspaceId, CreateTagDto dto);
+        Task<bool> AssignTagToTask(int userId, int taskId, int tagId);
+        Task<bool> HasAccessToTaskWorkspace(int userId, int taskId);
     }
 }

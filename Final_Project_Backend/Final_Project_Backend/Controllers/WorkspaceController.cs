@@ -66,66 +66,93 @@ public class WorkspaceController : ControllerBase
         return Ok(users);
     }
 
-
-
     [HttpDelete("{workspaceId}/users/{userIdToRemove}")]
-// [Authorize]
-public async Task<IActionResult> RemoveUserFromWorkspace(int workspaceId, int userIdToRemove)
-{
-    var nameIdentifierValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    if (string.IsNullOrEmpty(nameIdentifierValue))
+    public async Task<IActionResult> RemoveUserFromWorkspace(int workspaceId, int userIdToRemove)
     {
-        return Unauthorized("User not authenticated");
+        var nameIdentifierValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(nameIdentifierValue))
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var currentUserId = int.Parse(nameIdentifierValue);
+        var result = await _workspaceService.RemoveUserFromWorkspace(currentUserId, workspaceId, userIdToRemove);
+        return result ? NoContent() : BadRequest("Failed to remove user");
     }
-    var currentUserId = int.Parse(nameIdentifierValue);
-    var result = await _workspaceService.RemoveUserFromWorkspace(currentUserId, workspaceId, userIdToRemove);
-    return result ? NoContent() : BadRequest("Failed to remove user");
-}
 
-
-
-
-
-[HttpPut("{workspaceId}")]
-[Authorize]
-public async Task<IActionResult> UpdateWorkspace(int workspaceId, [FromBody] WorkspaceUpdateDto dto)
-{
-    var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    if (string.IsNullOrEmpty(userIdClaimValue))
+    [HttpPut("{workspaceId}")]
+    [Authorize]
+    public async Task<IActionResult> UpdateWorkspace(int workspaceId, [FromBody] WorkspaceUpdateDto dto)
     {
-        return Unauthorized("User not authenticated");
+        var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaimValue))
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaimValue);
+        var result = await _workspaceService.UpdateWorkspace(userId, workspaceId, dto);
+        return result != null ? Ok(result) : BadRequest("Update failed");
     }
-    var userId = int.Parse(userIdClaimValue);
-    var result = await _workspaceService.UpdateWorkspace(userId, workspaceId, dto);
-    return result != null ? Ok(result) : BadRequest("Update failed");
-}
 
-[HttpDelete("{workspaceId}")]
-[Authorize]
-public async Task<IActionResult> DeleteWorkspace(int workspaceId)
-{
-    var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    if (string.IsNullOrEmpty(userIdClaimValue))
+    [HttpDelete("{workspaceId}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteWorkspace(int workspaceId)
     {
-        return Unauthorized("User not authenticated");
+        var userIdClaimValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaimValue))
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaimValue);
+        var result = await _workspaceService.DeleteWorkspace(userId, workspaceId);
+        return result ? NoContent() : BadRequest("Delete failed");
     }
-    var userId = int.Parse(userIdClaimValue);
-    var result = await _workspaceService.DeleteWorkspace(userId, workspaceId);
-    return result ? NoContent() : BadRequest("Delete failed");
-}
 
-[HttpGet("count-by-role")]
-public async Task<IActionResult> CountWorkspacesByRole()
-{
-    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-    if (userIdClaim == null)
+    [HttpGet("count-by-role")]
+    public async Task<IActionResult> CountWorkspacesByRole()
     {
-        return Unauthorized("User not authenticated");
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaim.Value);
+
+        var roleCounts = await _workspaceService.CountWorkspacesByRole(userId);
+        return Ok(roleCounts);
     }
-    var userId = int.Parse(userIdClaim.Value);
 
-    var roleCounts = await _workspaceService.CountWorkspacesByRole(userId);
-    return Ok(roleCounts);
-}
+    [HttpPost("{workspaceId}/tags")]
+    public async Task<IActionResult> CreateTag(int workspaceId, [FromBody] CreateTagDto dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaim.Value);
 
+        var result = await _workspaceService.CreateTag(userId, workspaceId, dto);
+        return result != null ? Ok(result) : BadRequest("Failed to create tag");
+    }
+
+    [HttpPost("tasks/{taskId}/tags/{tagId}")]
+    public async Task<IActionResult> AssignTagToTask(int taskId, int tagId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+        var userId = int.Parse(userIdClaim.Value);
+
+        // Ensure the user has access to the workspace via _workspaceService.GetUserWorkspaces
+        var hasAccess = await _workspaceService.HasAccessToTaskWorkspace(userId, taskId);
+        if (!hasAccess)
+        {
+            return Forbid("User does not have access to the workspace");
+        }
+
+        var result = await _workspaceService.AssignTagToTask(userId, taskId, tagId);
+        return result ? NoContent() : BadRequest("Failed to assign tag to task");
+    }
 }
