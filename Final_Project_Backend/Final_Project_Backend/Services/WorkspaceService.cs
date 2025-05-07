@@ -203,5 +203,21 @@ public async Task<bool> DeleteWorkspace(int userId, int workspaceId)
     return true;
 }
 
+
+public async Task<Dictionary<WorkspaceRole, int>> CountWorkspacesByRole(int userId)
+{
+    
+    var roleCounts = await _context.UserWorkspaces
+        .Where(uw => uw.UserId == userId)
+        .GroupBy(uw => uw.Role)
+        .Select(group => new
+        {
+            Role = group.Key,
+            Count = group.Count()
+        })
+        .ToDictionaryAsync(g => g.Role, g => g.Count);
+
+    return roleCounts;
+}
 }
 }

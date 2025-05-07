@@ -39,18 +39,18 @@ builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"))
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+// Register NotificationService
+builder.Services.AddScoped<INotificationService, NotificationService>();
+
+builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
+builder.Services.AddScoped<IProjectTaskService, ProjectTaskService>();
+
 // Add Authentication services
 var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>();
 if (jwtSettings == null)
 {
     throw new InvalidOperationException("JWT settings not found in the configuration.");
 }
-
-
-// Add 
-builder.Services.AddScoped<IWorkspaceService, WorkspaceService>();
-builder.Services.AddScoped<IProjectTaskService, ProjectTaskService>();
-
 
 var key = Encoding.ASCII.GetBytes(jwtSettings.Key);  
 

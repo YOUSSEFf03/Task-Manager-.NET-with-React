@@ -12,6 +12,9 @@ namespace Final_Project_Backend.Models
         public string Message { get; set; } = null!;
         public int NotificationTypeId { get; set; }
 
+        public bool IsRead { get; set; } = false;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         // Navigation properties
         public User User { get; set; } = null!;
         public Task Task { get; set; } = null!;

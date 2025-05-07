@@ -114,6 +114,18 @@ public async Task<IActionResult> DeleteWorkspace(int workspaceId)
     return result ? NoContent() : BadRequest("Delete failed");
 }
 
+[HttpGet("count-by-role")]
+public async Task<IActionResult> CountWorkspacesByRole()
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+    if (userIdClaim == null)
+    {
+        return Unauthorized("User not authenticated");
+    }
+    var userId = int.Parse(userIdClaim.Value);
 
+    var roleCounts = await _workspaceService.CountWorkspacesByRole(userId);
+    return Ok(roleCounts);
+}
 
 }

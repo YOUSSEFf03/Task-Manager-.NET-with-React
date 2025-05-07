@@ -17,5 +17,8 @@ namespace Final_Project_Backend.Services
 
         Task<Workspace?> UpdateWorkspace(int userId, int workspaceId, WorkspaceUpdateDto dto);
         Task<bool> DeleteWorkspace(int userId, int workspaceId);
+
+        Task<Dictionary<WorkspaceRole, int>> CountWorkspacesByRole(int userId);
+
     }
 }
