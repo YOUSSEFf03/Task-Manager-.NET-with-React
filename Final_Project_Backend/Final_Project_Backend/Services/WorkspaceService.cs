@@ -19,6 +19,34 @@ namespace Final_Project_Backend.Services
             _userRepository = userRepository;
         }
 
+        public async Task<WorkspaceResponseDto?> GetWorkspaceById(int userId, int workspaceId)
+        {
+            var workspace = await _context.Workspaces
+                .Include(w => w.UserWorkspaces)
+                .FirstOrDefaultAsync(w => w.WorkspaceId == workspaceId);
+
+            if (workspace == null)
+            {
+                return null;
+            }
+
+            var userWorkspace = workspace.UserWorkspaces
+                .FirstOrDefault(uw => uw.UserId == userId);
+
+            if (userWorkspace == null)
+            {
+                return null;
+            }
+
+            return new WorkspaceResponseDto(
+                workspace.WorkspaceId,
+                workspace.Name,
+                workspace.Description,
+                workspace.CreatedByUserId,
+                userWorkspace.Role.ToString()
+            );
+        }
+
         public async Task<IEnumerable<Workspace>> GetWorkspacesByUser(int userId)
         {
             return await _context.UserWorkspaces
@@ -338,7 +366,7 @@ public async Task<bool> AssignTagToTask(int userId, int taskId, int tagId)
         // }
 
 
-        
+
 
         // public async Task<IEnumerable<Comment>> GetCommentsByTask(int taskId)
         // {

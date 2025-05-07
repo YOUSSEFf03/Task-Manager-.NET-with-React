@@ -188,4 +188,34 @@ public async Task<IActionResult> AssignTagToTask(int taskId, int tagId)
         var users = await _workspaceService.SearchUsers(query);
         return Ok(users);
     }
+
+    [Authorize]
+    [HttpGet("{workspaceId}")]
+    public async Task<IActionResult> GetWorkspace(int workspaceId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+
+        var userId = int.Parse(userIdClaim.Value);
+
+        try
+        {
+            var workspace = await _workspaceService.GetWorkspaceById(userId, workspaceId);
+
+            if (workspace == null)
+            {
+                return NotFound("Workspace not found.");
+            }
+
+            return Ok(workspace);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error retrieving workspace: {ex.Message}");
+            return StatusCode(500, "Internal server error");
+        }
+    }
 }

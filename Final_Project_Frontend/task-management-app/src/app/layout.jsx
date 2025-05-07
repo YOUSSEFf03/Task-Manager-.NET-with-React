@@ -5,6 +5,103 @@ import { Link } from 'react-router-dom';
 import H from '../components/H.jsx';
 import Button from '../components/Button.jsx';
 
+const InputWithSVG = ({ searchTerm, setSearchTerm }) => (
+    <div className="input-container">
+        <div className="svg-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#AAAAAA" viewBox="0 0 16 16">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
+            </svg>
+        </div>
+        <input
+            type="text"
+            className="search-input"
+            placeholder="Search Projects"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+        />
+    </div>
+);
+
+const UserModal = ({ show, onClose }) => {
+    if (!show) return null;
+
+    const users = [
+        { name: 'Demo User', role: 'Admin' },
+        { name: 'Alex Smith', role: 'Member' },
+        { name: 'Jane Doe', role: 'Viewer' },
+    ];
+
+    return (
+        <div style={{
+            position: 'fixed',
+            top: 0, left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0,0,0,0.3)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+        }}>
+            <div style={{
+                width: '500px',
+                background: '#fff',
+                borderRadius: '10px',
+                boxShadow: 'var(--shadow-light)',
+                padding: '24px',
+                position: 'relative',
+            }}>
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '16px'
+                }}>
+                    <H level={3} style={{ margin: 0 }}>Workspace Users Setting</H>
+                    <button onClick={onClose} style={{
+                        background: 'transparent',
+                        border: 'none',
+                        fontSize: '20px',
+                        cursor: 'pointer',
+                    }}>×</button>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                    <InputWithSVG searchTerm={''} setSearchTerm={() => { }} />
+                    <Button text="Add User" color="primary" />
+                </div>
+
+                <H level={4} style={{ marginBottom: '12px' }}>Who has access</H>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {users.map((user, idx) => (
+                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '50%',
+                                backgroundColor: '#EEE',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                fontWeight: 'bold',
+                                color: '#555'
+                            }}>
+                                {user.name.charAt(0)}
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                                <div style={{ fontWeight: '500' }}>{user.name}</div>
+                                <div style={{ fontSize: '12px', color: '#888' }}>{user.role}</div>
+                            </div>
+
+
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const Layout = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -12,6 +109,7 @@ const Layout = () => {
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [menuOpen, setMenuOpen] = useState(false);
+    const [showUserModal, setShowUserModal] = useState(false);
     const menuRef = useRef(null);
 
     useEffect(() => {
@@ -48,7 +146,7 @@ const Layout = () => {
         navigate('/');
     };
 
-    const isWorkspacePage = location.pathname === '/workspace';
+    const isWorkspacePage = location.pathname.startsWith('/workspace/');
 
     return (
         <div className="app-container">
@@ -65,7 +163,7 @@ const Layout = () => {
                     </div>
 
                     {isWorkspacePage && (
-                        <div className='user-control-icon'>
+                        <div className='user-control-icon' onClick={() => setShowUserModal(true)}>
                             <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
                                 <path stroke="currentColor" stroke-linecap="square" stroke-linejoin="round" stroke-width="2" d="M10 19H5a1 1 0 0 1-1-1v-1a3 3 0 0 1 3-3h2m10 1a3 3 0 0 1-3 3m3-3a3 3 0 0 0-3-3m3 3h1m-4 3a3 3 0 0 1-3-3m3 3v1m-3-4a3 3 0 0 1 3-3m-3 3h-1m4-3v-1m-2.121 1.879-.707-.707m5.656 5.656-.707-.707m-4.242 0-.707.707m5.656-5.656-.707.707M12 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                             </svg>
@@ -102,6 +200,7 @@ const Layout = () => {
                 </aside>
                 <main className="main-content">
                     <Outlet />
+                    <UserModal show={showUserModal} onClose={() => setShowUserModal(false)} />
                 </main>
             </div>
         </div>
