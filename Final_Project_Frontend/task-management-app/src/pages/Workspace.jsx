@@ -71,6 +71,16 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
   const [startDate, setStartDate] = useState('');
   const [deadline, setDeadline] = useState('');
 
+  const inputStyle = {
+    width: '95%',
+    minWidth: '95%',
+    maxWidth: '95%',
+    padding: '8px',
+    margin: '8px 0',
+    borderRadius: '8px',
+    border: '1px solid #ccc',
+  };
+
   const handleCreate = () => {
     const newProject = {
       name,
@@ -92,32 +102,51 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h3>Create Project</h3>
-        <input
-          type="text"
-          placeholder="Project Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <textarea
-          placeholder="Project Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        <input
-          type="date"
-          placeholder="Start Date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-        />
-        <input
-          type="date"
-          placeholder="Deadline"
-          value={deadline}
-          onChange={(e) => setDeadline(e.target.value)}
-        />
+        <h3 style={{margin: 0}}>Create Project</h3>
+        <div>
+          <label htmlFor="projectName" style={{ display: 'block', fontSize: '14px' }}>Project Name</label>
+          <input
+            id="projectName"
+            style={inputStyle}
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="projectDescription" style={{ fontSize: '14px', display: 'block' }}>Project Description</label>
+          <textarea
+            id="projectDescription"
+            style={inputStyle}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="startDate" style={{ fontSize: '14px', display: 'block' }}>Start Date</label>
+          <input
+            id="startDate"
+            style={inputStyle}
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="deadline" style={{ fontSize: '14px', display: 'block' }}>Deadline</label>
+          <input
+            id="deadline"
+            style={inputStyle}
+            type="date"
+            value={deadline}
+            onChange={(e) => setDeadline(e.target.value)}
+          />
+        </div>
         <Button text="Create Project" onClick={handleCreate} />
-        <Button text="Cancel" onClick={onClose} color="secondary" />
+        <Button text="Cancel" onClick={onClose} color="tertiary" />
       </div>
     </div>
   );
