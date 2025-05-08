@@ -16,7 +16,7 @@ const statusLabels = {
   4: "Removed",
 };
 
-const ProjectCard = ({ projectId, name, description, deadline, status }) => {
+const ProjectCard = ({ projectId, name, description, deadline, status, onEdit, onDelete }) => {
   const navigate = useNavigate();
 
   const statusColors = {
@@ -178,6 +178,54 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }) => {
   );
 };
 
+const EditProjectModal = ({ isOpen, onClose, onSave, project }) => {
+  const [name, setName] = useState(project?.name || '');
+  const [description, setDescription] = useState(project?.description || '');
+
+  const inputStyle = {
+    width: '95%',
+    padding: '8px',
+    margin: '8px 0',
+    borderRadius: '8px',
+    border: '1px solid #ccc',
+  };
+
+  const handleSave = () => {
+    onSave({ ...project, name, description });
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h3 style={{ margin: 0 }}>Edit Project</h3>
+        <div>
+          <label htmlFor="editProjectName" style={{ display: 'block', fontSize: '14px' }}>Project Name</label>
+          <input
+            id="editProjectName"
+            style={inputStyle}
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+        <div>
+          <label htmlFor="editProjectDescription" style={{ fontSize: '14px', display: 'block' }}>Project Description</label>
+          <textarea
+            id="editProjectDescription"
+            style={inputStyle}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+        <Button text="Save Changes" onClick={handleSave} />
+        <Button text="Cancel" onClick={onClose} color="tertiary" />
+      </div>
+    </div>
+  );
+};
 
 const Workspace = () => {
   const { workspaceId } = useParams();
@@ -185,7 +233,8 @@ const Workspace = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [projects, setProjects] = useState([]);
-  // const [showUserModal, setShowUserModal] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [projectToEdit, setProjectToEdit] = useState(null);
 
   useEffect(() => {
     fetchProjects();
@@ -219,6 +268,51 @@ const Workspace = () => {
       setProjects((prev) => [...prev, response.data]);
     } catch (error) {
       console.error('Error creating project:', error);
+    }
+  };
+
+  const onEdit = (projectId) => {
+    const project = projects.find((p) => p.projectId === projectId);
+    setProjectToEdit(project);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async (updatedProject) => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await axios.put(
+        `http://localhost:5137/api/projects/${updatedProject.projectId}`,
+        updatedProject,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setProjects((prev) =>
+        prev.map((project) =>
+          project.projectId === updatedProject.projectId ? { ...project, ...response.data } : project
+        )
+      );
+    } catch (error) {
+      console.error('Error saving project changes:', error);
+    }
+  };
+
+  const onDelete = async (projectId) => {
+    const token = localStorage.getItem('token');
+    const confirmDelete = window.confirm("Are you sure you want to delete this project?");
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`http://localhost:5137/api/projects/${projectId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setProjects((prev) => prev.filter((project) => project.projectId !== projectId));
+    } catch (error) {
+      console.error('Error deleting project:', error);
     }
   };
 
@@ -280,7 +374,7 @@ const Workspace = () => {
             iconLeft={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
               viewBox="0 0 24 24">
               <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                d="M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                d="M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1-18 0Z" />
             </svg>}
             text="Create Project"
             color="primary"
@@ -292,6 +386,13 @@ const Workspace = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onCreate={handleCreateProject}
+      />
+
+      <EditProjectModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={handleSaveEdit}
+        project={projectToEdit}
       />
 
       <div style={{
@@ -308,6 +409,8 @@ const Workspace = () => {
               description={project.description}
               deadline={project.deadline}
               status={project.status}
+              onEdit={onEdit}
+              onDelete={onDelete}
             />
           ))
         ) : (
