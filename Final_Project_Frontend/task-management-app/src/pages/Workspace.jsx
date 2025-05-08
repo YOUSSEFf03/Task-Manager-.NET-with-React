@@ -299,11 +299,21 @@ const Workspace = () => {
     }
   };
 
-  const onDelete = (projectId) => {
-    const confirmDelete = window.confirm("Are you sure you want to remove this project from the page?");
+  const onDelete = async (projectId) => {
+    const token = localStorage.getItem('token');
+    const confirmDelete = window.confirm("Are you sure you want to delete this project?");
     if (!confirmDelete) return;
 
-    setProjects((prev) => prev.filter((project) => project.projectId !== projectId));
+    try {
+      await axios.delete(`http://localhost:5137/api/projects/${projectId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setProjects((prev) => prev.filter((project) => project.projectId !== projectId));
+    } catch (error) {
+      console.error('Error deleting project:', error);
+    }
   };
 
   const filteredProjects = projects.filter((project) =>
