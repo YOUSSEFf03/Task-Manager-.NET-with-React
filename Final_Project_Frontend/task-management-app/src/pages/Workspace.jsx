@@ -45,13 +45,31 @@ const ProjectCard = ({ projectId, name, description, deadline, status }) => {
         boxShadow: 'var(--shadow-light)',
         borderLeft: `6px solid ${statusColors[statusLabel?.toLowerCase()] || statusColors.default}`,
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'row',
         justifyContent: 'space-between',
         cursor: 'pointer',
       }}>
-      <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#333' }}>{name}</h3>
-      <p style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>{description}</p>
-      <p style={{ fontSize: '12px', color: '#999', margin: 0 }}>Deadline: {deadline}</p>
+      <div>
+        <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#333' }}>{name}</h3>
+        <p style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>{description}</p>
+        <p style={{ fontSize: '12px', color: '#999', margin: 0 }}>Deadline: {deadline}</p>
+      </div>
+      <div style={{ display: 'flex', gap: '8px', flexDirection: 'column', alignItems: 'center' }}>
+        <svg onClick={(e) => {
+          e.stopPropagation(); // Prevent triggering the card click
+          onEdit(projectId);
+        }}
+          class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
+          <path className='workspace-svg' stroke="var(--neutral-700)" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.779 17.779 4.36 19.918 6.5 13.5m4.279 4.279 8.364-8.643a3.027 3.027 0 0 0-2.14-5.165 3.03 3.03 0 0 0-2.14.886L6.5 13.5m4.279 4.279L6.499 13.5m2.14 2.14 6.213-6.504M12.75 7.04 17 11.28" />
+        </svg>
+        <svg onClick={(e) => {
+          e.stopPropagation(); // Prevent triggering the card click
+          onDelete(projectId);
+        }}
+          class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
+          <path className='workspace-svg' stroke="var(--neutral-700)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z" />
+        </svg>
+      </div>
     </div>
   );
 };

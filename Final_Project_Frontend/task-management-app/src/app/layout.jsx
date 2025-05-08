@@ -16,7 +16,7 @@ const InputWithSVG = ({ searchTerm, setSearchTerm }) => (
         <input
             type="text"
             className="search-input"
-            placeholder="Search Projects"
+            placeholder="Search Users"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -331,6 +331,7 @@ const UserModal = ({ show, onClose }) =>
                             borderRadius: '8px',
                             border: '1px solid #ccc',
                             flex: 1,
+                            fontFamily: 'poppins',
                         }}
                     >
                         <option value="Admin">Admin</option>
@@ -345,9 +346,10 @@ const UserModal = ({ show, onClose }) =>
                     {users.map((user, idx) => (
                         <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <div style={{
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '50%',
+                                width: '24px',
+                                height: '24px',
+                                borderRadius: 'var(--radius-full)',
+                                padding: '8px',
                                 backgroundColor: '#EEE',
                                 display: 'flex',
                                 justifyContent: 'center',
