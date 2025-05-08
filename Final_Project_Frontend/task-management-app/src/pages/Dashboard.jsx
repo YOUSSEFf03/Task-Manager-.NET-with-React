@@ -102,69 +102,101 @@ const Modal = ({ isOpen, onClose, onCreate }) => {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
-        {/* <button style={buttonStyle} onClick={handleCreate}>Create</button> */}
         <Button onClick={handleCreate} text="Create Workspace" color="primary" />
       </div>
     </div>
   );
 };
 
-const WorkspaceCard = ({ workspaceId, name, description, role }) => {
+const DeleteModal = ({ isOpen, onClose, onDelete }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1000,
+    }}>
+      <div style={{
+        backgroundColor: '#fff',
+        padding: '20px',
+        borderRadius: '12px',
+        width: '400px',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+        textAlign: 'center',
+      }}>
+        <h3>Are you sure you want to delete this workspace?</h3>
+        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between' }}>
+          <Button onClick={onDelete} text="Delete" color="danger" />
+          <Button onClick={onClose} text="Cancel" color="secondary" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const WorkspaceCard = ({ workspaceId, name, description, role, onDelete }) => {
   const navigate = useNavigate();
 
   const handleCardClick = () => {
-    navigate(`/workspace/${workspaceId}`);
-  };
-
-  const cardStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 'var(--radius-16)',
-    padding: '12px 16px',
-    marginTop: '8px',
-    width: '250px',
-    height: '100px',
-    boxShadow: 'var(--shadow-light)',
-    marginRight: '12px',
-    flexShrink: 0,
-    cursor: 'pointer',
-  };
-
-  const iconStyle = {
-    width: '50px',
-    height: '50px',
-    borderRadius: '50%',
-    backgroundColor: '#d0d0d0',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontWeight: 'bold',
-    marginRight: '12px',
-    fontSize: '24px',
-    color: '#ffffff',
-  };
-
-  const nameStyle = {
-    margin: 0,
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#333',
-  };
-
-  const descStyle = {
-    fontSize: '12px',
-    color: '#aaa',
-    margin: 0,
+    navigate(`/workspace/${workspaceId}`); 
   };
 
   return (
-    <div style={cardStyle} onClick={handleCardClick}>
-      <div style={iconStyle}>{name.charAt(0).toUpperCase()}</div>
-      <div>
-        <h3 style={nameStyle}>{name}</h3>
-        {description && <p style={descStyle}>{description}</p>}
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        backgroundColor: '#ffffff',
+        borderRadius: 'var(--radius-16)',
+        padding: '12px 16px',
+        marginTop: '8px',
+        width: '250px',
+        height: '100px',
+        boxShadow: 'var(--shadow-light)',
+        marginRight: '12px',
+        flexShrink: 0,
+        cursor: 'pointer',
+      }}
+      onClick={handleCardClick} // Trigger navigation on click
+    >
+      <div style={{
+        width: '50px',
+        height: '50px',
+        borderRadius: '50%',
+        backgroundColor: '#d0d0d0',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: 'bold',
+        marginRight: '12px',
+        fontSize: '24px',
+        color: '#ffffff',
+      }}>
+        {name.charAt(0).toUpperCase()}
       </div>
+      <div style={{ flex: 1 }}>
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: '#333' }}>{name}</h3>
+        {description && <p style={{ fontSize: '12px', color: '#aaa', margin: 0 }}>{description}</p>}
+      </div>
+      {role === 'Admin' && (
+        <Button
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent triggering the card click
+            onDelete(workspaceId);
+          }}
+          text="Delete"
+          color="danger"
+          style={{ marginLeft: 'auto' }}
+        />
+      )}
     </div>
   );
 };
@@ -192,6 +224,8 @@ const Dashboard = () => {
   const [workspaces, setWorkspaces] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [workspaceToDelete, setWorkspaceToDelete] = useState(null);
   const [showOwned, setShowOwned] = useState(true);
   const [showMember, setShowMember] = useState(true);
   const [showViewer, setShowViewer] = useState(true);
@@ -234,18 +268,30 @@ const Dashboard = () => {
 
   const handleCreateWorkspace = async (workspaceData) => {
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) {
+      console.error("No token found in localStorage.");
+      alert("You must be logged in to create a workspace.");
+      return;
+    }
 
     try {
       const response = await axios.post('http://localhost:5137/api/workspaces', workspaceData, {
         headers: {
           Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
       });
 
+      if (response.status !== 201 && response.status !== 200) {
+        console.error(`Unexpected response status: ${response.status}`);
+        console.error("Response data:", response.data);
+        alert("Failed to create workspace. Please try again.");
+        return;
+      }
+
       const createdWorkspace = response.data;
 
-      // Add the new workspace to the state with its role
+      // Add the new workspace to the state
       setWorkspaces((prev) => [
         ...prev,
         {
@@ -253,12 +299,54 @@ const Dashboard = () => {
           name: createdWorkspace.name,
           description: createdWorkspace.description,
           createdByUserId: createdWorkspace.createdByUserId,
-          role: createdWorkspace.role  // This will now contain the role
-        }
+          role: createdWorkspace.role, // This will now contain the role
+        },
       ]);
 
     } catch (error) {
-      console.error('Error creating workspace:', error);
+      if (error.response) {
+        console.error("Error response from server:", error.response.data);
+        alert(`Error: ${error.response.data.message || "Failed to create workspace."}`);
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+        alert("No response from server. Please check your network connection.");
+      } else {
+        console.error("Error creating workspace:", error.message);
+        alert("An unexpected error occurred. Please try again.");
+      }
+    }
+  };
+
+  const handleDeleteWorkspace = async () => {
+    const token = localStorage.getItem('token');
+    if (!token || !workspaceToDelete) {
+      console.error("No token found or no workspace selected.");
+      alert("You must be logged in to delete a workspace.");
+      return;
+    }
+
+    try {
+      await axios.delete(`http://localhost:5137/api/workspaces/${workspaceToDelete}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // Remove the deleted workspace from the state
+      setWorkspaces((prev) => prev.filter((ws) => ws.workspaceId !== workspaceToDelete));
+      setDeleteModalOpen(false);
+      setWorkspaceToDelete(null);
+    } catch (error) {
+      if (error.response) {
+        console.error("Error response from server:", error.response.data);
+        alert(`Error: ${error.response.data.message || "Failed to delete workspace."}`);
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+        alert("No response from server. Please check your network connection.");
+      } else {
+        console.error("Error deleting workspace:", error.message);
+        alert("An unexpected error occurred. Please try again.");
+      }
     }
   };
 
@@ -340,21 +428,14 @@ const Dashboard = () => {
         borderRadius: 'var(--radius-16)',
       }}>
 
-        {/* Available Workspaces Box aligned under the header/search */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           flexDirection: 'column',
-          // alignItems: 'center',
           gap: '24px',
-          // backgroundColor: '#f0f0f0',
-          borderRadius: '8px',
-          // padding: '15px',
         }}>
           <div className='banner-content-dashboard' style={{ width: '65%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {/* <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>Available Workspaces</h3> */}
             <H level={4} style={{ margin: 0 }}>Boost Your Productivity! Create a Workspace and Start Managing Your Projects Seamlessly.</H>
-            {/* <p style={{ fontSize: '14px', color: '#888' }}>List of all available workspaces.</p> */}
             <Button onClick={() => setModalOpen(true)}
               iconLeft={<svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -369,7 +450,15 @@ const Dashboard = () => {
         onCreate={handleCreateWorkspace}
       />
 
-      {/* Owned Workspaces Section */}
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setWorkspaceToDelete(null);
+        }}
+        onDelete={handleDeleteWorkspace}
+      />
+
       <div style={sectionStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <H level={4} style={{ fontSize: '20px', fontWeight: '600', color: '#333' }}>
@@ -382,9 +471,6 @@ const Dashboard = () => {
         {showOwned && (
           <div style={horizontalScrollStyle}>
             <div style={scrollContainerStyle}>
-              {/* {owned.map((ws, idx) => (
-                <WorkspaceCard key={idx} {...ws} />
-              ))} */}
               {ownedWorkspaces.map((ws) => (
                 <WorkspaceCard
                   key={ws.workspaceId}
@@ -392,6 +478,10 @@ const Dashboard = () => {
                   name={ws.name}
                   description={ws.description}
                   role={ws.role}
+                  onDelete={(workspaceId) => {
+                    setWorkspaceToDelete(workspaceId);
+                    setDeleteModalOpen(true);
+                  }}
                 />
               ))}
             </div>
@@ -399,11 +489,10 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Member Workspaces Section */}
       <div style={sectionStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <H level={4} style={{ fontSize: '20px', fontWeight: '600', color: '#333' }}>
-            Member Workspaces ({memberWorkspaces.length}) {/* Member Workspaces Header */}
+            Member Workspaces ({memberWorkspaces.length})
           </H>
           <button style={toggleButtonStyle} onClick={() => toggleVisibility('member')}>
             {showMember ? 'Hide' : 'Show'}
@@ -412,9 +501,6 @@ const Dashboard = () => {
         {showMember && (
           <div style={horizontalScrollStyle}>
             <div style={scrollContainerStyle}>
-              {/* {member.map((ws, idx) => (
-                <WorkspaceCard key={idx} {...ws} />
-              ))} */}
               {memberWorkspaces.map((ws) => (
                 <WorkspaceCard
                   key={ws.workspaceId}
@@ -429,11 +515,10 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Viewer Workspaces Section */}
       <div style={sectionStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <H level={4} style={{ fontSize: '20px', fontWeight: '600', color: '#333' }}>
-            Viewer Workspaces ({viewerWorkspaces.length}) {/* Viewer Workspaces Header */}
+            Viewer Workspaces ({viewerWorkspaces.length})
           </H>
           <button style={toggleButtonStyle} onClick={() => toggleVisibility('viewer')}>
             {showViewer ? 'Hide' : 'Show'}
@@ -442,9 +527,6 @@ const Dashboard = () => {
         {showViewer && (
           <div style={horizontalScrollStyle}>
             <div style={scrollContainerStyle}>
-              {/* {viewer.map((ws, idx) => (
-                <WorkspaceCard key={idx} {...ws} />
-              ))} */}
               {viewerWorkspaces.map((ws) => (
                 <WorkspaceCard
                   key={ws.workspaceId}

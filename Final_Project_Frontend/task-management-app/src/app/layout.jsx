@@ -22,12 +22,15 @@ const InputWithSVG = ({ searchTerm, setSearchTerm }) => (
     </div>
 );
 
-const UserModal = ({ show, onClose }) => {
-    const [users, setUsers] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [searchResults, setSearchResults] = useState([]);
-    const [selectedUser, setSelectedUser] = useState(null);
-    const [role, setRole] = useState('Admin');
+const UserModal = ({ show, onClose }) => 
+    {
+        const [users, setUsers] = useState([]);
+        const [searchTerm, setSearchTerm] = useState('');
+        const [searchResults, setSearchResults] = useState([]);
+        const [selectedUser, setSelectedUser] = useState(null);
+        const [role, setRole] = useState('Admin');
+        const location = useLocation(); // Moved to component level
+        const workspaceId = location.pathname.split('/')[2]; // Get workspace ID from URL
 
     useEffect(() => {
         if (show) {
@@ -49,15 +52,97 @@ const UserModal = ({ show, onClose }) => {
                         console.error('Error parsing JSON response');
                         return [];
                     });
-                    setUsers(data);
+                    setUsers(data || []); // Ensure users list is empty if no data is returned
                 } catch (error) {
                     console.error('Error fetching users:', error);
+                    setUsers([]); // Clear users list on error
                 }
             };
 
             fetchUsers();
+        } else {
+            setUsers([]); // Clear users list when modal is closed
         }
-    }, [show]);
+    }, [show]); 
+
+
+    const handleAddUser = async () => {
+        if (!selectedUser) {
+            alert('Please select a user to add.');
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:5137/api/workspaces/${workspaceId}/users`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: selectedUser.email,
+                    role,
+                }),
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                if (response.status === 403) {
+                    alert('You do not have permission to add users to this workspace');
+                } else {
+                    alert(errorData.message || 'Failed to add user');
+                }
+                return;
+            }
+            
+            // Refresh the users list
+            const updatedUsers = await fetchUsers(workspaceId);
+            setUsers(updatedUsers);
+            setSelectedUser(null);
+            setSearchTerm('');
+            setSearchResults([]);
+        } catch (error) {
+            console.error('Error adding user:', error);
+            alert('An error occurred while adding the user');
+        }
+    };
+
+    // Update fetchUsers to accept workspaceId parameter
+    const fetchUsers = async (workspaceId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:5137/api/workspaces/${workspaceId}/users`, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (!response.ok) {
+                console.error(`Error fetching users: ${response.status} ${response.statusText}`);
+                return [];
+            }
+            const data = await response.json().catch(() => []);
+            return data || [];
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            return [];
+        }
+    };
+
+    // Update useEffect to use the new fetchUsers
+    useEffect(() => {
+        if (show && workspaceId) {
+            const loadUsers = async () => {
+                const users = await fetchUsers(workspaceId);
+                setUsers(users);
+            };
+            loadUsers();
+        } else {
+            setUsers([]);
+        }
+    }, [show, workspaceId]);
 
     const handleRemoveUser = async (userId) => {
         try {
@@ -73,7 +158,7 @@ const UserModal = ({ show, onClose }) => {
                 console.error(`Error removing user: ${response.status} ${response.statusText}`);
                 return;
             }
-            alert('User removed successfully!');
+            // alert('User removed successfully!');
             setUsers((prevUsers) => prevUsers.filter((user) => user.userId !== userId));
         } catch (error) {
             console.error('Error removing user:', error);
@@ -103,37 +188,71 @@ const UserModal = ({ show, onClose }) => {
         }
     };
 
-    const handleAddUser = async () => {
-        if (!selectedUser) {
-            alert('Please select a user to add.');
-            return;
-        }
+    // const handleAddUser = async () => {
+    //     if (!selectedUser) {
+    //         alert('Please select a user to add.');
+    //         return;
+    //     }
+    
+    //     const location = useLocation();
+    //     const workspaceId = location.pathname.split('/')[2];
+    
+    //     try {
+    //         const token = localStorage.getItem('token');
+    //         const response = await fetch(`http://localhost:5137/api/workspaces/${workspaceId}/users`, {
+    //             method: 'POST',
+    //             headers: {
+    //                 Authorization: `Bearer ${token}`,
+    //                 'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify({
+    //                 email: selectedUser.email,
+    //                 role,
+    //             }),
+    //         });
+            
+    //         if (!response.ok) {
+    //             const errorData = await response.json();
+    //             if (response.status === 403) {
+    //                 alert('You do not have permission to add users to this workspace');
+    //             } else {
+    //                 alert(errorData.message || 'Failed to add user');
+    //             }
+    //             return;
+    //         }
+            
+    //         // Refresh the users list
+    //         const fetchUsers = async (workspaceId) => {
+    //             try {
+    //                 const token = localStorage.getItem('token');
+    //                 const response = await fetch(`http://localhost:5137/api/workspaces/${workspaceId}/users`, {
+    //                     method: 'GET',
+    //                     headers: {
+    //                         Authorization: `Bearer ${token}`,
+    //                         'Content-Type': 'application/json',
+    //                     },
+    //                 });
+    //                 if (!response.ok) {
+    //                     console.error(`Error fetching users: ${response.status} ${response.statusText}`);
+    //                     return [];
+    //                 }
+    //                 return await response.json();
+    //             } catch (error) {
+    //                 console.error('Error fetching users:', error);
+    //                 return [];
+    //             }
+    //         };
 
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5137/api/workspaces/3/users', {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: selectedUser.email,
-                    role,
-                }),
-            });
-            if (!response.ok) {
-                console.error(`Error adding user: ${response.status} ${response.statusText}`);
-                return;
-            }
-            alert('User added successfully!');
-            setSelectedUser(null);
-            setSearchTerm('');
-            setSearchResults([]);
-        } catch (error) {
-            console.error('Error adding user:', error);
-        }
-    };
+    //         const updatedUsers = await fetchUsers(workspaceId);
+    //         setUsers(updatedUsers);
+    //         setSelectedUser(null);
+    //         setSearchTerm('');
+    //         setSearchResults([]);
+    //     } catch (error) {
+    //         console.error('Error adding user:', error);
+    //         alert('An error occurred while adding the user');
+    //     }
+    // };
 
     if (!show) return null;
 
