@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import H from '../components/H.jsx';
 import Button from '../components/Button.jsx';
 import NotificationSidebar from '../components/NotificationSidebar.jsx';
+import TagsModal from "../components/TagsModal.jsx";
 
 const InputWithSVG = ({ searchTerm, setSearchTerm }) => (
     <div className="input-container">
@@ -23,15 +24,14 @@ const InputWithSVG = ({ searchTerm, setSearchTerm }) => (
     </div>
 );
 
-const UserModal = ({ show, onClose }) => 
-    {
-        const [users, setUsers] = useState([]);
-        const [searchTerm, setSearchTerm] = useState('');
-        const [searchResults, setSearchResults] = useState([]);
-        const [selectedUser, setSelectedUser] = useState(null);
-        const [role, setRole] = useState('Admin');
-        const location = useLocation(); // Moved to component level
-        const workspaceId = location.pathname.split('/')[2]; // Get workspace ID from URL
+const UserModal = ({ show, onClose }) => {
+    const [users, setUsers] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [role, setRole] = useState('Admin');
+    const location = useLocation(); // Moved to component level
+    const workspaceId = location.pathname.split('/')[2]; // Get workspace ID from URL
 
     useEffect(() => {
         if (show) {
@@ -64,7 +64,7 @@ const UserModal = ({ show, onClose }) =>
         } else {
             setUsers([]); // Clear users list when modal is closed
         }
-    }, [show]); 
+    }, [show]);
 
 
     const handleAddUser = async () => {
@@ -86,7 +86,7 @@ const UserModal = ({ show, onClose }) =>
                     role,
                 }),
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 if (response.status === 403) {
@@ -96,7 +96,7 @@ const UserModal = ({ show, onClose }) =>
                 }
                 return;
             }
-            
+
             // Refresh the users list
             const updatedUsers = await fetchUsers(workspaceId);
             setUsers(updatedUsers);
@@ -194,10 +194,10 @@ const UserModal = ({ show, onClose }) =>
     //         alert('Please select a user to add.');
     //         return;
     //     }
-    
+
     //     const location = useLocation();
     //     const workspaceId = location.pathname.split('/')[2];
-    
+
     //     try {
     //         const token = localStorage.getItem('token');
     //         const response = await fetch(`http://localhost:5137/api/workspaces/${workspaceId}/users`, {
@@ -211,7 +211,7 @@ const UserModal = ({ show, onClose }) =>
     //                 role,
     //             }),
     //         });
-            
+
     //         if (!response.ok) {
     //             const errorData = await response.json();
     //             if (response.status === 403) {
@@ -221,7 +221,7 @@ const UserModal = ({ show, onClose }) =>
     //             }
     //             return;
     //         }
-            
+
     //         // Refresh the users list
     //         const fetchUsers = async (workspaceId) => {
     //             try {
@@ -387,6 +387,13 @@ const Layout = () => {
     const [showUserModal, setShowUserModal] = useState(false);
     const menuRef = useRef(null);
     const [isNotificationOpen, setNotificationOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [showTagsModal, setShowTagsModal] = useState(false);
+    const workspaceId = location.pathname.split("/")[2];
+
+    const toggleTagsModal = () => {
+        setShowTagsModal(!showTagsModal);
+    };
 
     useEffect(() => {
         const name = localStorage.getItem('userFullName') || '';
@@ -406,6 +413,31 @@ const Layout = () => {
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const fetchUnreadCount = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:5137/api/notifications/count-unread', {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch unread count');
+
+            const count = await response.json();
+            setUnreadCount(count);
+        } catch (error) {
+            console.error('Error fetching unread count:', error);
+            setUnreadCount(0);
+        }
+    };
+
+    useEffect(() => {
+        fetchUnreadCount();
     }, []);
 
     const handleLogout = async () => {
@@ -435,7 +467,9 @@ const Layout = () => {
                         <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
                             <path d="M224 0c-17.7 0-32 14.3-32 32V51.2C119 66 64 130.6 64 208v25.4c0 45.4-15.5 89.5-43.8 124.9L5.3 377c-5.8 7.2-6.9 17.1-2.9 25.4S14.8 416 24 416H424c9.2 0 17.6-5.3 21.6-13.6s2.9-18.2-2.9-25.4l-14.9-18.6C399.5 322.9 384 278.8 384 233.4V208c0-77.4-55-142-128-156.8V32c0-17.7-14.3-32-32-32zm0 96c61.9 0 112 50.1 112 112v25.4c0 47.9 13.9 94.6 39.7 134.6H72.3C98.1 328 112 281.3 112 233.4V208c0-61.9 50.1-112 112-112zm64 352H224 160c0 17 6.7 33.3 18.7 45.3s28.3 18.7 45.3 18.7s33.3-6.7 45.3-18.7s18.7-28.3 18.7-45.3z" />
                         </svg>
-                        <span className="notification-badge"></span>
+                        {unreadCount > 0 && (
+                            <span className="notification-badge">{unreadCount}</span>
+                        )}
                     </div>
 
                     {isWorkspacePage && (
@@ -473,11 +507,22 @@ const Layout = () => {
             <div className="main-layout">
                 <aside className="sidebar">
                     {/* Sidebar nav items go here */}
+                    {isWorkspacePage && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderBottom: '1px solid #ccc', paddingBottom: '16px' }}>
+                            <div className='tag-container' onClick={toggleTagsModal}>
+                                <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.583 8.445h.01M10.86 19.71l-6.573-6.63a.993.993 0 0 1 0-1.4l7.329-7.394A.98.98 0 0 1 12.31 4l5.734.007A1.968 1.968 0 0 1 20 5.983v5.5a.992.992 0 0 1-.316.727l-7.44 7.5a.974.974 0 0 1-1.384.001Z" />
+                                </svg>
+                                <span className='tag-text'>Tags Management</span>
+                            </div>
+                        </div>
+                    )}
                 </aside>
                 <main className="main-content">
                     <Outlet />
                     <UserModal show={showUserModal} onClose={() => setShowUserModal(false)} />
-                    <NotificationSidebar isOpen={isNotificationOpen} onClose={() => setNotificationOpen(false)} />
+                    <NotificationSidebar isOpen={isNotificationOpen} onClose={() => setNotificationOpen(false)} updateUnreadCount={setUnreadCount} />
+                    <TagsModal isOpen={showTagsModal} onClose={toggleTagsModal} workspaceId={workspaceId} />
                 </main>
             </div>
         </div>

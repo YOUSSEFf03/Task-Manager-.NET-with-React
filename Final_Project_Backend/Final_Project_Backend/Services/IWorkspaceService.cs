@@ -18,6 +18,7 @@ namespace Final_Project_Backend.Services
         Task<bool> DeleteWorkspace(int userId, int workspaceId);
         Task<Dictionary<WorkspaceRole, int>> CountWorkspacesByRole(int userId);
         Task<Tag?> CreateTag(int userId, int workspaceId, CreateTagDto dto);
+        Task<IEnumerable<Tag>> GetTagsByWorkspace(int userId, int workspaceId);
         Task<bool> AssignTagToTask(int userId, int taskId, int tagId);
         Task<bool> HasAccessToTaskWorkspace(int userId, int taskId);
         Task<IEnumerable<UserSearchDto>> SearchUsers(string query);

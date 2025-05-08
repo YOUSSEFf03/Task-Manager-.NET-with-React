@@ -184,20 +184,20 @@ namespace Final_Project_Backend.Services
             return true;
         }
 
-       public async Task<IEnumerable<UserWithRoleDto>> GetUserWorkspaces(int workspaceId)
-{
-    return await _context.UserWorkspaces
-        .Where(wu => wu.WorkspaceId == workspaceId)
-        .Include(wu => wu.User)
-        .Select(wu => new UserWithRoleDto
+        public async Task<IEnumerable<UserWithRoleDto>> GetUserWorkspaces(int workspaceId)
         {
-            UserId = wu.User.UserId,
-            FullName = wu.User.FullName,
-            Email = wu.User.Email,
-            Role = wu.Role.ToString()
-        })
-        .ToListAsync();
-}
+            return await _context.UserWorkspaces
+                .Where(wu => wu.WorkspaceId == workspaceId)
+                .Include(wu => wu.User)
+                .Select(wu => new UserWithRoleDto
+                {
+                    UserId = wu.User.UserId,
+                    FullName = wu.User.FullName,
+                    Email = wu.User.Email,
+                    Role = wu.Role.ToString()
+                })
+                .ToListAsync();
+        }
 
         public async Task<bool> RemoveUserFromWorkspace(int requestingUserId, int workspaceId, int userIdToRemove)
         {
@@ -287,6 +287,23 @@ namespace Final_Project_Backend.Services
             return tag;
         }
 
+        public async Task<IEnumerable<Tag>> GetTagsByWorkspace(int userId, int workspaceId)
+        {
+            // Check if user has access to the workspace
+            var userWorkspace = await _context.UserWorkspaces
+                .FirstOrDefaultAsync(uw => uw.UserId == userId && uw.WorkspaceId == workspaceId);
+
+            if (userWorkspace == null)
+            {
+                throw new UnauthorizedAccessException("User does not have access to this workspace");
+            }
+
+            // Retrieve the tags for the workspace
+            return await _context.Tags
+                .Where(t => t.WorkspaceId == workspaceId)
+                .ToListAsync();
+        }
+
         public async Task<bool> AssignTagToTask(int userId, int taskId, int tagId)
         {
             // Get task and include its project/workspace
@@ -336,7 +353,7 @@ namespace Final_Project_Backend.Services
                 .AnyAsync(uw => uw.WorkspaceId == task.Project.Workspace.WorkspaceId && uw.UserId == userId);
 
             return isUserInWorkspace;
-        }   
+        }
 
         public async Task<IEnumerable<UserSearchDto>> SearchUsers(string query)
         {
