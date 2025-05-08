@@ -133,9 +133,9 @@ const DeleteModal = ({ isOpen, onClose, onDelete }) => {
         textAlign: 'center',
       }}>
         <h3>Are you sure you want to delete this workspace?</h3>
-        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between' }}>
-          <Button onClick={onDelete} text="Delete" color="danger" />
-          <Button onClick={onClose} text="Cancel" color="secondary" />
+        <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+          <Button onClick={onDelete} text="Delete" color="tertiary" />
+          <Button onClick={onClose} text="Cancel" color="primary" />
         </div>
       </div>
     </div>
@@ -191,14 +191,14 @@ const EditModal = ({ isOpen, onClose, onEdit, workspace }) => {
         </button>
         <H level={4} style={{ margin: 0 }}>Edit Workspace</H>
         <input
-          style={{ width: '100%', padding: '8px', margin: '8px 0', borderRadius: '8px', border: '1px solid #ccc' }}
+          style={{ width: '95%', padding: '8px', margin: '8px 0', borderRadius: '8px', border: '1px solid #ccc', fontFamily: 'var(--ff-poppins)' }}
           type="text"
           placeholder="Workspace Name (required)"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         <textarea
-          style={{ width: '100%', padding: '8px', margin: '8px 0', borderRadius: '8px', border: '1px solid #ccc' }}
+          style={{ width: '95%', maxWidth: "95%", minWidth: "95%", padding: '8px', margin: '8px 0', borderRadius: '8px', border: '1px solid #ccc', fontFamily: 'var(--ff-poppins)' }}
           placeholder="Description (optional)"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -213,7 +213,7 @@ const WorkspaceCard = ({ workspaceId, name, description, role, onDelete, onEdit 
   const navigate = useNavigate();
 
   const handleCardClick = () => {
-    navigate(`/workspace/${workspaceId}`); 
+    navigate(`/workspace/${workspaceId}`);
   };
 
   return (
@@ -238,7 +238,7 @@ const WorkspaceCard = ({ workspaceId, name, description, role, onDelete, onEdit 
         width: '50px',
         height: '50px',
         borderRadius: '50%',
-        backgroundColor: '#d0d0d0',
+        backgroundColor: 'var(--tertiary-50)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -254,23 +254,21 @@ const WorkspaceCard = ({ workspaceId, name, description, role, onDelete, onEdit 
         {description && <p style={{ fontSize: '12px', color: '#aaa', margin: 0 }}>{description}</p>}
       </div>
       {role === 'Admin' && (
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <Button
-            onClick={(e) => {
-              e.stopPropagation(); // Prevent triggering the card click
-              onEdit(workspaceId);
-            }}
-            text="Edit"
-            color="secondary"
-          />
-          <Button
-            onClick={(e) => {
-              e.stopPropagation(); // Prevent triggering the card click
-              onDelete(workspaceId);
-            }}
-            text="Delete"
-            color="danger"
-          />
+        <div style={{ display: 'flex', gap: '8px', flexDirection: 'column', alignItems: 'center' }}>
+          <svg onClick={(e) => {
+            e.stopPropagation(); // Prevent triggering the card click
+            onEdit(workspaceId);
+          }}
+            class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
+            <path className='workspace-svg' stroke="var(--neutral-700)" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.779 17.779 4.36 19.918 6.5 13.5m4.279 4.279 8.364-8.643a3.027 3.027 0 0 0-2.14-5.165 3.03 3.03 0 0 0-2.14.886L6.5 13.5m4.279 4.279L6.499 13.5m2.14 2.14 6.213-6.504M12.75 7.04 17 11.28" />
+          </svg>
+          <svg onClick={(e) => {
+            e.stopPropagation(); // Prevent triggering the card click
+            onDelete(workspaceId);
+          }}
+            class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
+            <path className='workspace-svg' stroke="var(--neutral-700)" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z" />
+          </svg>
         </div>
       )}
     </div>
