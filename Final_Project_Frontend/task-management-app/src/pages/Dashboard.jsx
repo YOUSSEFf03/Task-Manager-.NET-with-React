@@ -142,7 +142,74 @@ const DeleteModal = ({ isOpen, onClose, onDelete }) => {
   );
 };
 
-const WorkspaceCard = ({ workspaceId, name, description, role, onDelete }) => {
+const EditModal = ({ isOpen, onClose, onEdit, workspace }) => {
+  const [name, setName] = useState(workspace?.name || '');
+  const [description, setDescription] = useState(workspace?.description || '');
+
+  const handleEdit = () => {
+    if (name.trim()) {
+      onEdit({ ...workspace, name, description });
+      onClose();
+    } else {
+      alert('Name is required');
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1000,
+    }}>
+      <div style={{
+        backgroundColor: '#fff',
+        padding: '20px',
+        borderRadius: '12px',
+        width: '400px',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+        position: 'relative',
+      }}>
+        <button style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: '18px',
+        }} onClick={onClose}>
+          &times;
+        </button>
+        <H level={4} style={{ margin: 0 }}>Edit Workspace</H>
+        <input
+          style={{ width: '100%', padding: '8px', margin: '8px 0', borderRadius: '8px', border: '1px solid #ccc' }}
+          type="text"
+          placeholder="Workspace Name (required)"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <textarea
+          style={{ width: '100%', padding: '8px', margin: '8px 0', borderRadius: '8px', border: '1px solid #ccc' }}
+          placeholder="Description (optional)"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        <Button onClick={handleEdit} text="Save Changes" color="primary" />
+      </div>
+    </div>
+  );
+};
+
+const WorkspaceCard = ({ workspaceId, name, description, role, onDelete, onEdit }) => {
   const navigate = useNavigate();
 
   const handleCardClick = () => {
@@ -187,15 +254,24 @@ const WorkspaceCard = ({ workspaceId, name, description, role, onDelete }) => {
         {description && <p style={{ fontSize: '12px', color: '#aaa', margin: 0 }}>{description}</p>}
       </div>
       {role === 'Admin' && (
-        <Button
-          onClick={(e) => {
-            e.stopPropagation(); // Prevent triggering the card click
-            onDelete(workspaceId);
-          }}
-          text="Delete"
-          color="danger"
-          style={{ marginLeft: 'auto' }}
-        />
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Button
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent triggering the card click
+              onEdit(workspaceId);
+            }}
+            text="Edit"
+            color="secondary"
+          />
+          <Button
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent triggering the card click
+              onDelete(workspaceId);
+            }}
+            text="Delete"
+            color="danger"
+          />
+        </div>
       )}
     </div>
   );
@@ -225,7 +301,9 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setModalOpen] = useState(false);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [workspaceToDelete, setWorkspaceToDelete] = useState(null);
+  const [workspaceToEdit, setWorkspaceToEdit] = useState(null);
   const [showOwned, setShowOwned] = useState(true);
   const [showMember, setShowMember] = useState(true);
   const [showViewer, setShowViewer] = useState(true);
@@ -350,6 +428,43 @@ const Dashboard = () => {
     }
   };
 
+  const handleEditWorkspace = async (updatedWorkspace) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error("No token found in localStorage.");
+      alert("You must be logged in to edit a workspace.");
+      return;
+    }
+
+    try {
+      const response = await axios.put(
+        `http://localhost:5137/api/workspaces/${updatedWorkspace.workspaceId}`,
+        updatedWorkspace,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.status !== 200) {
+        console.error(`Unexpected response status: ${response.status}`);
+        alert("Failed to edit workspace. Please try again.");
+        return;
+      }
+
+      setWorkspaces((prev) =>
+        prev.map((ws) =>
+          ws.workspaceId === updatedWorkspace.workspaceId ? updatedWorkspace : ws
+        )
+      );
+    } catch (error) {
+      console.error("Error editing workspace:", error);
+      alert("An unexpected error occurred. Please try again.");
+    }
+  };
+
   const sectionStyle = {
     marginTop: '32px',
     marginBottom: '30px',
@@ -459,6 +574,13 @@ const Dashboard = () => {
         onDelete={handleDeleteWorkspace}
       />
 
+      <EditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        onEdit={handleEditWorkspace}
+        workspace={workspaces.find((ws) => ws.workspaceId === workspaceToEdit)}
+      />
+
       <div style={sectionStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <H level={4} style={{ fontSize: '20px', fontWeight: '600', color: '#333' }}>
@@ -481,6 +603,10 @@ const Dashboard = () => {
                   onDelete={(workspaceId) => {
                     setWorkspaceToDelete(workspaceId);
                     setDeleteModalOpen(true);
+                  }}
+                  onEdit={(workspaceId) => {
+                    setWorkspaceToEdit(workspaceId);
+                    setEditModalOpen(true);
                   }}
                 />
               ))}
