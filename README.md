@@ -81,9 +81,9 @@ A backend API for a full-featured Task Management System that enables streamline
 
 | Page             | Preview                                  |
 |------------------|-------------------------------------------|
-| **Landing Page** | ![Landing Page](screenshots/landing.png) |
-| **Signup Page**  | ![Signup Page](screenshots/signup.png)   |
-| **Workspace Page** | ![Workspace Page](screenshots/workspace.png) |
-| **Project Page** | ![Project Page](screenshots/project.png) |
-| **Task Page**    | ![Task Page](screenshots/task.png)       |
+| **Landing Page** | ![Landing Page](/documents/screenshots/landingPage.png) |
+| **Signup Page**  | ![Signup Page](/documents/screenshots/SignUp.png)   |
+| **Workspace Page** | ![Workspace Page](/documents/screenshots/WorkspaceDashBoard.png) |
+| **Project Page** | ![Project Page](/documents/screenshots/ProjectDashboard.png) |
+| **Task Page**    | ![Task Page](/documents/screenshots/TaskDashBoard.png)       |
 
